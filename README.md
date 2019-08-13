@@ -34,3 +34,7 @@ For silent mode, call dlae.py with a configuration file as the input
 ```markdown
 python dlae.py config_file.json
 ```
+
+# Test Model Compilation
+
+To test the compilation of an example model, run DLAE in GUI mode and load one of the prebuild models (either a CNN, FCN, GAN, or BBD). Once the layer list is populated, click `Test model compilation`.
