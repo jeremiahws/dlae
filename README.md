@@ -37,8 +37,8 @@ python dlae.py config_file.json
 
 # Test Model Compilation
 
-To test the compilation of an example model, run DLAE in GUI mode and load one of the prebuild models (either a CNN, FCN, GAN, or BBD). Once the layer list is populated, click `Test model compilation`.
+To test the compilation of an example model, run DLAE in GUI mode and load one of the prebuilt models (either a CNN, FCN, GAN, or BBD). Once the layer list is populated, click `Test model compilation`.
 
 # Example Datasets
 
-Example datasets for each of the DL techniques currently included in DLAE are provided in `dlae/datasets`. The primary purpose of these datasets is to familiarize users with the data input formats for the four different DL techniques. 
+Example datasets for each of the DL techniques currently included in DLAE are provided in `dlae/datasets`. These were created by simply making matrices or random noise that correspond to the required input dimensions. The primary purpose of these datasets is to familiarize users with the data input formats for the four different DL techniques. Users can use these datasets to guide the curation of their own data sets.
