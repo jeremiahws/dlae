@@ -18,6 +18,12 @@ scikit-learn==0.21.2
 pillow==6.1.0
 ```
 
+To install using `anaconda3`
+```markdown
+conda create -n dlae python==3.6.8
+conda install tensorflow-gpu==1.13.1 keras==2.2.4 imageio==2.5.0 opencv==3.4.2 keras-applications==1.0.7 scikit-learn==0.21.2 pillow==6.1.0
+```
+
 # Usage
 
 There are two primary usages (1) GUI mode and (2) silent mode. For GUI mode, call DLAE with the following command
