@@ -2,11 +2,13 @@
 
 DLAE is a software framework and application that enables users to design, train, validate, and coherently encapsulate and deploy deep learning (DL) models in medical imaging, while hiding programmatic implementation details. Researchers and developers in other imaging domains may also find this software useful.
 
+# Python Version
+DLAE currently uses Python version 3.6.8
+
 # Installation
 
 The following modules are required to run DLAE:
 ```markdown
-python==3.6.8
 tensorflow-gpu==1.13.1
 keras==2.2.4
 imageio==2.5.0
