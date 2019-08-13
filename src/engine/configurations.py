@@ -29,23 +29,6 @@ class EngineConfigurations(object):
         """
         Constructor class to build the engine configurations for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            dispatcher --
-            data_preprocessing --
-            train_data --
-            val_data --
-            test_data --
-            learning_rate --
-            optimizer --
-            monitors --
-            loader --
-            saver --
-            layers --
-            loss_function --
-            train_options --
-            callbacks --
-            augmentation --
         """
         self.dispatcher = Dispatcher(configs)
         self.data_preprocessing = Preprocessing(configs, self.dispatcher)
@@ -69,10 +52,6 @@ class Dispatcher(object):
         """
         Constructor class to build the dispatcher for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            model_signal -- signal telling engine the DL technique to apply
-            type_signal -- signal telling engine DL task to perform
         """
         self.model_signal = configs['config_file']['model_signal']
         self.type_signal = configs['config_file']['type_signal']
@@ -84,24 +63,6 @@ class Preprocessing(object):
         Constructor class to build the image preprocessing configurations for DLAE.
         :param configs: engine configuration structure
         :param dispatcher: the engine dispatcher
-
-        Attributes:
-            f_minImageIntensity --
-            f_maxImageIntensity --
-            s_image_context --
-            s_normalization_type --
-            b_to_categorical --
-            b_weight_loss --
-            b_reshapeX --
-            t_reshapeX --
-            b_permuteX --
-            t_permuteX --
-            b_repeatX --
-            i_repeatX --
-            b_reshapeY --
-            t_reshapeY --
-            b_permuteY --
-            t_permuteY --
         """
         self.f_minImageIntensity = configs['preprocessing']['minimum_image_intensity']
         self.f_maxImageIntensity = configs['preprocessing']['maximum_image_intensity']
@@ -138,14 +99,6 @@ class TrainData(object):
         :param configs: engine configuration structure
         :param preprocessing: the preprocessing steps
         :param dispatcher: the engine dispatcher
-
-        Attributes:
-            errors --
-            warnings --
-            s_trainXPath --
-            s_trainYPath --
-            trainX --
-            trainY --
         """
         self.errors = []
         self.warnings = []
@@ -359,14 +312,6 @@ class ValidationData(object):
         :param configs: engine configuration structure
         :param preprocessing: the preprocessing steps
         :param dispatcher: the engine dispatcher
-
-        Attributes:
-            errors --
-            warnings --
-            s_valXPath --
-            s_valYPath --
-            valX --
-            valY --
         """
         self.errors = []
         self.warnings = []
@@ -580,12 +525,6 @@ class TestData(object):
         :param configs: engine configuration structure
         :param preprocessing: the preprocessing steps
         :param dispatcher: the engine dispatcher
-
-        Attributes:
-            errors --
-            warnings --
-            s_testXPath --
-            testX --
         """
         self.errors = []
         self.warnings = []
@@ -728,18 +667,6 @@ class LearningRate(object):
         """
         Constructor class to prepare the learning rate configurations for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            f_lr --
-            f_lrDecay --
-            b_lrDecayOnPlateau --
-            f_lrDecayOnPlateauFactor --
-            i_lrDecayOnPlateauPatience --
-            b_lrStepDecay --
-            f_lrStepDecayFactor --
-            i_lrStepDecayPeriod --
-            s_lrDiscriminator --
-            s_lrGAN --
         """
         self.f_lr = float(configs['learning_rate_schedule']['learning_rate'])
         self.f_lrDecay = float(configs['learning_rate_schedule']['learning_rate_decay_factor'])
@@ -759,17 +686,6 @@ class Optimizer(object):
         Constructor class to prepare the optimizer configurations for DLAE.
         :param configs: engine configuration structure
         :param learning_rate: the learning rate configurations
-
-        Attributes:
-            s_optimizer --
-            s_d_optimizer --
-            s_gan_optimizer --
-            f_optimizerBeta1 --
-            f_optimizerBeta2 --
-            f_optimizerEpsilon --
-            f_optimizerRho --
-            f_optimizerMomentum --
-            learning_rate --
         """
         self.s_optimizer = configs['optimizer']['optimizer']
         self.s_d_optimizer = configs['optimizer']['discriminator_optimizer']
@@ -894,12 +810,6 @@ class Monitors(object):
         """
         Constructor class to prepare the monitor configurations for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            b_monitorMSE --
-            b_monitorMAE --
-            b_monitorAcc --
-            monitors --
         """
         self.b_monitorMSE = str2bool(configs['monitors']['mse_switch'])
         self.b_monitorMAE = str2bool(configs['monitors']['mae_switch'])
@@ -921,10 +831,6 @@ class Loader(object):
         """
         Constructor class to prepare the loading configurations for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            s_loadModelPath --
-            s_loadCheckpointPath --
         """
         self.s_loadModelPath = configs['paths']['load_model']
         self.s_loadCheckpointPath = configs['paths']['load_checkpoint']
@@ -935,20 +841,6 @@ class Saver(object):
         """
         Constructor class to prepare the saving configurations for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            errors --
-            warmings --
-            b_saveModel --
-            s_saveModelPath --
-            b_saveCSV --
-            s_saveCSVPath --
-            b_saveCkpt --
-            s_saveCkptPath --
-            i_saveCkptFrequency --
-            b_recordTensorboardLogs --
-            s_recordTensorboardPath --
-            i_recordTensorboardFrequency --
         """
         self.errors = []
         self.warnings = []
@@ -985,12 +877,6 @@ class Layers(object):
         """
         Constructor class to store the layer configurations for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            s_listOfLayers --
-            s_listOfGeneratorLayers --
-            s_listOfDiscriminatorLayers --
-            t_input_shape --
         """
         self.s_listOfLayers = configs['layers']['serial_layer_list']
         self.s_listOfGeneratorLayers = configs['layers']['generator_layer_list']
@@ -1003,12 +889,6 @@ class LossFunction(object):
         """
         Constructor class to prepare the loss function configurations for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            s_lossFunction --
-            f_parameter1 --
-            f_parameter2 --
-            loss --
         """
         self.s_lossFunction = configs['loss_function']['loss']
         self.f_parameter1 = float(configs['loss_function']['parameter1'])
@@ -1053,34 +933,6 @@ class TrainingOptions(object):
         """
         Constructor class to prepare the training options for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            i_batchSize --
-            i_epochs --
-            s_hardware --
-            i_nGpus --
-            b_shuffleData --
-            f_validationSplit --
-            b_earlyStop --
-            i_earlyStopPatience --
-            s_scalingType --
-            l_scales --
-            s_aspectRatiosType --
-            l_aspectRatios --
-            i_numberOfBBDClasses --
-            l_steps --
-            l_offsets --
-            l_variances --
-            f_confidenceThreshold --
-            f_iouThreshold --
-            f_posIouThreshold --
-            f_negIouLimit --
-            i_topK --
-            i_nmsMaximumOutput --
-            s_coordinatesType --
-            b_twoBoxesForAR1 --
-            b_clipBoxes --
-            b_normalizeCoordinates --
         """
         self.i_batchSize = int(configs['training_configurations']['batch_size'])
         self.i_epochs = int(configs['training_configurations']['epochs'])
@@ -1115,9 +967,6 @@ class Callbacks(object):
         """
         Constructor class to prepare the callbacks for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            callbacks --
         """
         self.callbacks = []
 
@@ -1151,24 +1000,6 @@ class Augmentation(object):
         """
         Constructor class to prepare the training options for DLAE.
         :param configs: engine configuration structure
-
-        Attributes:
-            b_augmentation --
-            b_fw_centering --
-            b_sw_centering --
-            b_fw_normalization --
-            b_sw_normalization --
-            f_width_shift --
-            f_height_shift --
-            i_rotation_range --
-            t_brightness_range --
-            f_shear_range --
-            f_zoom_range --
-            f_channel_shift_range --
-            s_fill_mode --
-            f_cval --
-            b_horizontal_flip --
-            b_vertical_flip --
         """
         self.b_augmentation = literal_eval(configs['augmentation']['apply_augmentation_switch'])
         self.b_fw_centering = literal_eval(configs['augmentation']['featurewise_centering_switch'])
