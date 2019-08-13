@@ -44,40 +44,58 @@ To test the compilation of an example model, run DLAE in GUI mode and load one o
 ## CNN
 
 An HDF5 file with a single data set of a numpy array of size:
+
 2D Images: (# images, rows, columns, channels)
+
 3D Images: (# images, rows, columns, slices, channels)
 
+
 An HDF5 file with a single data set of a numpy array of size:
+
 Annotations for classification tasks: (# images,)
+
 Annotations for regression tasks: (# images, # coordinates)
 
 ## FCN
 
 An HDF5 file with a single data set of a numpy array of size:
+
 2D Images: (# images, rows, columns, channels)
+
 3D Images: (# images, rows, columns, slices, channels)
 
+
 An HDF5 file with a single data set of a numpy array of size:
+
 2D Annotations: (# images, rows, columns, channels)
+
 3D Annotations: (# images, rows, columns, slices, channels)
 
 ## GAN
 
 An HDF5 file with a single data set of a numpy array of size:
+
 2D Images: (# images, rows, columns, channels)
 
+
 An HDF5 file with a single data set of a numpy array of size:
+
 2D Annotations: (# images, rows, columns, channels)
 
 ## BBD
 
 An HDF5 file with a # data sets = # images, and each data set is a numpy array of size:
+
 2D Images: (rows, columns, channels)
 
+
 An HDF5 file with a # data sets = # images, and each data set is a numpy array of size:
+
 2D Annotations: (# boxes, 5)
 
+
 Each box has the following annotation (class, x_min, y_min, x_max, y_max)
+
 
 The data sets in the images file should have the exact same names as those in the annotations file.
 
