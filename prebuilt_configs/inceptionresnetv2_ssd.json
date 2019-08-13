@@ -1,0 +1,135 @@
+{
+ "config_file": {
+  "model_signal": "BBD",
+  "type_signal": "Train",
+  "input_shape": "(512, 512, 1)"
+ },
+ "paths": {
+  "load_config": "",
+  "load_checkpoint": "",
+  "load_model": "",
+  "train_X": "",
+  "train_y": "",
+  "validation_X": "",
+  "validation_y": "",
+  "test_X": ""
+ },
+ "preprocessing": {
+  "minimum_image_intensity": "0.0",
+  "maximum_image_intensity": "4096.0",
+  "image_context": "2D",
+  "normalization_type": "X from [0, 1]",
+  "categorical_switch": "False",
+  "weight_loss_switch": "False",
+  "reshape_X_switch": "False",
+  "reshape_X_dimensions": "",
+  "permute_X_switch": "False",
+  "permute_X_dimensions": "",
+  "repeat_X_switch": "False",
+  "repeat_X_quantity": "",
+  "reshape_y_switch": "False",
+  "reshape_y_dimensions": "",
+  "permute_y_switch": "False",
+  "permute_y_dimensions": ""
+ },
+ "augmentation": {
+  "apply_augmentation_switch": "True",
+  "featurewise_centering_switch": "False",
+  "samplewise_centering_switch": "False",
+  "featurewise_normalization_switch": "False",
+  "samplewise_normalization_switch": "False",
+  "width_shift": "0.0",
+  "height_shift": "0.0",
+  "rotation_range": "0",
+  "brightness_range": "None",
+  "shear_range": "0.0",
+  "zoom_range": "0.0",
+  "channel_shift_range": "0.0",
+  "fill_mode": "nearest",
+  "cval": "0.0",
+  "horizontal_flip_switch": "True",
+  "vertical_flip_switch": "True"
+ },
+ "loss_function": {
+  "loss": "ssd",
+  "parameter1": "3",
+  "parameter2": "1.0"
+ },
+ "learning_rate_schedule": {
+  "learning_rate": "0.001",
+  "learning_rate_decay_factor": "0.0",
+  "decay_on_plateau_switch": "True",
+  "decay_on_plateau_factor": "0.2",
+  "decay_on_plateau_patience": "3",
+  "step_decay_switch": "False",
+  "step_decay_factor": "0.1",
+  "step_decay_period": "3",
+  "discriminator_learning_rate": "0.0001:0.0",
+  "gan_learning_rate": "0.0001:0.0"
+ },
+ "optimizer": {
+  "optimizer": "Adam",
+  "beta1": "0.9",
+  "beta2": "0.999",
+  "rho": "0.9",
+  "momentum": "0.0",
+  "epsilon": "None",
+  "discriminator_optimizer": "Adam:0.9:0.999:0.9:0.0:None",
+  "gan_optimizer": "Adam:0.9:0.999:0.9:0.0:None"
+ },
+ "training_configurations": {
+  "hardware": "gpu",
+  "number_of_gpus": "1",
+  "early_stop_switch": "True",
+  "early_stop_patience": "10",
+  "batch_size": "32",
+  "epochs": "500",
+  "shuffle_data_switch": "True",
+  "validation_split": "0.2"
+ },
+ "monitors": {
+  "mse_switch": "False",
+  "mae_switch": "False",
+  "accuracy_switch": "False"
+ },
+ "save_configurations": {
+  "save_model_switch": "False",
+  "save_model_path": "",
+  "save_csv_switch": "False",
+  "save_csv_path": "",
+  "save_checkpoints_switch": "False",
+  "save_checkpoints_path": "",
+  "save_checkpoints_frequency": "1",
+  "save_tensorboard_switch": "False",
+  "save_tensorboard_path": "",
+  "save_tensorboard_frequency": "5"
+ },
+ "bbd_options": {
+  "scaling_type": "global",
+  "scales": "0.1, 0.9",
+  "aspect_ratios_type": "per predictor layer",
+  "aspect_ratios": "((1.0, 2.0, 0.5), (1.0, 2.0, 0.5, 3.0, 0.333), (1.0, 2.0, 0.5, 3.0, 0.333), (1.0, 2.0, 0.5), (1.0, 2.0, 0.5))",
+  "number_classes": "1",
+  "steps": "(32, 64, 128, 256, 512)",
+  "offsets": "None",
+  "variances": "(0.1, 0.1, 0.2, 0.2)",
+  "confidence_threshold": "0.01",
+  "iou_threshold": "0.45",
+  "top_k": "200",
+  "nms_maximum_output": "400",
+  "coordinates_type": "centroids",
+  "two_boxes_for_AR1_switch": "False",
+  "clip_boxes_switch": "False",
+  "normalize_coordinates_switch": "True",
+  "positive_iou_threshold": "0.5",
+  "negative_iou_limit": "0.3"
+ },
+ "layers": {
+  "serial_layer_list": [
+   "Input:(512, 512, 1)",
+   "InceptionResNetV2:False:none:(512, 512, 1):False:True"
+  ],
+  "generator_layer_list": [],
+  "discriminator_layer_list": []
+ }
+}
