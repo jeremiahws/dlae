@@ -8,13 +8,15 @@ DLAE currently uses `python==3.6.8`
 # Installation
 
 The following modules are required to run DLAE:
-`tensorflow-gpu==1.13.1`
-`keras==2.2.4`
-`imageio==2.5.0`
-`opencv==3.4.2`
-`keras-applications==1.0.7`
-`scikit-learn==0.21.2`
-`pillow==6.1.0`
+```markdown
+tensorflow-gpu==1.13.1
+keras==2.2.4
+imageio==2.5.0
+opencv==3.4.2
+keras-applications==1.0.7
+scikit-learn==0.21.2
+pillow==6.1.0
+```
 
 # Usage
 
