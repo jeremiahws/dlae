@@ -101,4 +101,4 @@ The data sets in the images file should have the exact same names as those in th
 
 # Example Datasets
 
-Example datasets for each of the DL techniques currently included in DLAE are provided in `dlae/datasets`. These were created by simply making matrices or random noise that correspond to the required input dimensions. The primary purpose of these datasets is to familiarize users with the data input formats for the four different DL techniques. Users can use these datasets to guide the curation of their own data sets.
+Example datasets for each of the DL techniques currently included in DLAE are provided in `dlae/datasets`. These were created by simply making matrices of random noise that correspond to the required input dimensions. The primary purpose of these datasets is to familiarize users with the data input formats for the four different DL techniques. Users can use these datasets to guide the curation of their own data sets.
