@@ -991,6 +991,7 @@ class Callbacks(object):
         if learning_rate.b_lrDecayOnPlateau:
             reduce_on_plateau = keras.callbacks.ReduceLROnPlateau(patience=learning_rate.i_lrDecayOnPlateauPatience,
                                                                   factor=learning_rate.f_lrDecayOnPlateauFactor,
+                                                                  cooldown=learning_rate.i_lrDecayOnPlateauPatience,
                                                                   min_lr=1e-9)
             self.callbacks.append(reduce_on_plateau)
 
