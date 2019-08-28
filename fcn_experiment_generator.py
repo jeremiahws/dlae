@@ -51,7 +51,6 @@ def main(FLAGS):
         configs['augmentation']['height_shift'] = '0.15'
         configs['augmentation']['rotation_range'] = '10'
         configs['augmentation']['zoom_range'] = '0.15'
-        configs['augmentation']['brightness_range'] = '(0.75, 1.25)'
         configs['augmentation']['shear_range'] = '0.175'
 
         # set the training configurations
