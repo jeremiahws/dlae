@@ -68,6 +68,9 @@ def main(FLAGS):
         configs['training_configurations']['epochs'] = '{}'.format(FLAGS.epochs)
         configs['training_configurations']['validation_split'] = '0.0'
 
+        # set the learning rate
+        configs['learning_rate_schedule']['learning_rate'] = FLAGS.learning_rate
+
         # turn on savers
         configs['save_configurations']['save_checkpoints_switch'] = 'True'
         configs['save_configurations']['save_csv_switch'] = 'True'
@@ -258,6 +261,10 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int,
                         default=1000,
                         help='Number of training epochs.')
+
+    parser.add_argument('--learning_rate', type=float,
+                        default=0.0001,
+                        help='Learning rate.')
 
     parser.add_argument('--num_gpus', type=int,
                         default=1,
