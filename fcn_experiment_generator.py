@@ -110,6 +110,16 @@ def main(FLAGS):
                 decoder.remove('Outer skip target:concatenate')
         encoder = ':'.join(encoder_parts)
 
+        if FLAGS.use_imagenet_weights:
+            encoder_parts[1] = 'True'
+            encoder_parts[2] = 'imagenet'
+            configs['preprocessing']['repeat_X_switch'] = 'True'
+            configs['preprocessing']['repeat_X_quantity'] = '3'
+        else:
+            encoder_parts[1] = 'False'
+            encoder_parts[2] = 'none'
+        configs['preprocessing']['repeat_X_switch'] = 'False'
+
         # inject some layers to connect the encoder to the decoder
         # for this experiment not many injectors are needed, but may be for others
         # they're broken up by the type of encoder
@@ -215,6 +225,10 @@ if __name__ == '__main__':
     parser.add_argument('--use_skip_connections', type=bool,
                         default=True,
                         help='Whether or not to use skip connections between the encoder and decoder.')
+
+    parser.add_argument('--use_imagenet_weights', type=bool,
+                        default=False,
+                        help='Whether or not to use a warm start with ImageNet weights.')
 
     parser.add_argument('--width', type=int,
                         default=512,
