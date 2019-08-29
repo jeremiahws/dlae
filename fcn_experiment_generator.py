@@ -46,6 +46,7 @@ def main(FLAGS):
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'xception_unet.json'))
 
         # apply some augmentation
+        # configs['augmentation']['apply_augmentation_switch'] = 'True'
         # configs['preprocessing']['categorical_switch'] = 'True'
         configs['augmentation']['width_shift'] = '0.15'
         configs['augmentation']['height_shift'] = '0.15'
@@ -209,7 +210,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--base_configs_dir', type=str,
-                        default=r'C:\Users\jsanders\Desktop\dlae_migration2\dlae\prebuilt_configs',
+                        default=r'C:\Users\jsanders\Desktop\dlae\src\prebuilt_configs',
                         help='Directory to template configuration files from which to make spawns from.')
 
     parser.add_argument('--losses', type=str,
@@ -263,27 +264,27 @@ if __name__ == '__main__':
                         help='Parameter 1 of the loss function(s).')
 
     parser.add_argument('--train_X_path', type=str,
-                        default=r'C:\Users\jsanders\Desktop\dlae_migration2\example_fcn_X_data.h5',
+                        default=r'C:\Users\jsanders\Desktop\dlae\datasets\example_fcn_X_data.h5',
                         help='NF1 patient training images.')
 
     parser.add_argument('--train_y_path', type=str,
-                        default=r'C:\Users\jsanders\Desktop\dlae_migration2\example_fcn_y_data.h5',
+                        default=r'C:\Users\jsanders\Desktop\dlae\datasets\example_fcn_y_data.h5',
                         help='NF1 patient training masks.')
 
     parser.add_argument('--valid_X_path', type=str,
-                        default=r'C:\Users\jsanders\Desktop\dlae_migration2\example_fcn_X_data.h5',
+                        default=r'C:\Users\jsanders\Desktop\dlae\datasets\example_fcn_X_data.h5',
                         help='NF1 patient validation images.')
 
     parser.add_argument('--valid_y_path', type=str,
-                        default=r'C:\Users\jsanders\Desktop\dlae_migration2\example_fcn_y_data.h5',
+                        default=r'C:\Users\jsanders\Desktop\dlae\datasets\example_fcn_y_data.h5',
                         help='NF1 patient validation masks.')
 
     parser.add_argument('--save_ckpt_path', type=str,
-                        default=r'C:\Users\jsanders\Desktop\dlae_migration2\dlae\ckpt',
+                        default=r'C:\Users\jsanders\Desktop\dlae\ckpt',
                         help='Path to save the model checkpoints.')
 
     parser.add_argument('--save_csv_path', type=str,
-                        default=r'C:\Users\jsanders\Desktop\dlae_migration2\dlae\csv',
+                        default=r'C:\Users\jsanders\Desktop\dlae\csv',
                         help='Path to save the CSV logs.')
 
     # parse known arguements
