@@ -123,7 +123,7 @@ def main(FLAGS):
         else:
             encoder_parts[1] = 'False'
             encoder_parts[2] = 'none'
-        configs['preprocessing']['repeat_X_switch'] = 'False'
+            configs['preprocessing']['repeat_X_switch'] = 'False'
 
         # inject some layers to connect the encoder to the decoder
         # for this experiment not many injectors are needed, but may be for others
