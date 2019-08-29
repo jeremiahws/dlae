@@ -27,6 +27,7 @@ import datetime
 import time
 from keras.preprocessing.image import ImageDataGenerator
 from src.utils.data_utils import ImageDataGenerator3D
+from math import floor
 
 
 class ConvolutionalNeuralNetwork(object):
@@ -106,8 +107,14 @@ class ConvolutionalNeuralNetwork(object):
                 val_data = (self.engine_configs.val_data.valX, self.engine_configs.val_data.valY)
                 val_split = 0.0
             elif self.engine_configs.val_data.valX is None and self.engine_configs.train_options.f_validationSplit > 0:
-                val_data = None
                 val_split = self.engine_configs.train_options.f_validationSplit
+                n_tot_imgs = self.engine_configs.train_data.trainX.shape[0]
+                n_val_imgs = floor(val_split * n_tot_imgs)
+                self.engine_configs.val_data.valX = self.engine_configs.train_data.trainX[:n_val_imgs]
+                self.engine_configs.val_data.valY = self.engine_configs.train_data.trainY[:n_val_imgs]
+                self.engine_configs.train_data.trainX = self.engine_configs.train_data.trainX[n_val_imgs:]
+                self.engine_configs.train_data.trainY = self.engine_configs.train_data.trainY[n_val_imgs:]
+                val_data = (self.engine_configs.val_data.valX, self.engine_configs.val_data.valY)
             else:
                 val_data = None
                 val_split = 0.0
@@ -143,8 +150,7 @@ class ConvolutionalNeuralNetwork(object):
                                                 fill_mode=self.engine_configs.augmentation.s_fill_mode,
                                                 cval=self.engine_configs.augmentation.f_cval,
                                                 horizontal_flip=self.engine_configs.augmentation.b_horizontal_flip,
-                                                vertical_flip=self.engine_configs.augmentation.b_vertical_flip,
-                                                validation_split=val_split)
+                                                vertical_flip=self.engine_configs.augmentation.b_vertical_flip)
 
                 except:
                     self.errors.append('Level3Error:CouldNotEstablish2dDataAugmentationGenerator')
@@ -173,16 +179,7 @@ class ConvolutionalNeuralNetwork(object):
                 X_data.fit(self.engine_configs.train_data.trainX, rounds=2, seed=1)
                 train_generator = X_data.flow(self.engine_configs.train_data.trainX,
                                               self.engine_configs.train_data.trainY,
-                                              batch_size=self.engine_configs.train_options.i_batchSize,
-                                              subset='training')
-
-                if val_split > 0.0 and self.engine_configs.data_preprocessing.s_image_context != '3D':
-                    val_data = X_data.flow(self.engine_configs.train_data.trainX,
-                                           self.engine_configs.train_data.trainY,
-                                           batch_size=self.engine_configs.train_options.i_batchSize,
-                                           subset='validation')
-
-                    val_steps = np.ceil(self.engine_configs.train_data.trainX.shape[0] * val_split / self.engine_configs.train_options.i_batchSize)
+                                              batch_size=self.engine_configs.train_options.i_batchSize)
 
             except:
                 self.errors.append('Level3Error:CouldNotConstructDataAugmentationGenerator')

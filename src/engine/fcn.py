@@ -26,6 +26,7 @@ import datetime
 import time
 from keras.preprocessing.image import ImageDataGenerator
 from src.utils.data_utils import ImageDataGenerator3D
+from math import floor
 
 
 class FullyConvolutionalNetwork(object):
@@ -97,8 +98,14 @@ class FullyConvolutionalNetwork(object):
                 val_data = (self.engine_configs.val_data.valX, self.engine_configs.val_data.valY)
                 val_split = 0.0
             elif self.engine_configs.val_data.valX is None and self.engine_configs.train_options.f_validationSplit > 0:
-                val_data = None
                 val_split = self.engine_configs.train_options.f_validationSplit
+                n_tot_imgs = self.engine_configs.train_data.trainX.shape[0]
+                n_val_imgs = floor(val_split * n_tot_imgs)
+                self.engine_configs.val_data.valX = self.engine_configs.train_data.trainX[:n_val_imgs]
+                self.engine_configs.val_data.valY = self.engine_configs.train_data.trainY[:n_val_imgs]
+                self.engine_configs.train_data.trainX = self.engine_configs.train_data.trainX[n_val_imgs:]
+                self.engine_configs.train_data.trainY = self.engine_configs.train_data.trainY[n_val_imgs:]
+                val_data = (self.engine_configs.val_data.valX, self.engine_configs.val_data.valY)
             else:
                 val_data = None
                 val_split = 0.0
@@ -123,8 +130,7 @@ class FullyConvolutionalNetwork(object):
                                                 fill_mode=self.engine_configs.augmentation.s_fill_mode,
                                                 cval=self.engine_configs.augmentation.f_cval,
                                                 horizontal_flip=self.engine_configs.augmentation.b_horizontal_flip,
-                                                vertical_flip=self.engine_configs.augmentation.b_vertical_flip,
-                                                validation_split=val_split)
+                                                vertical_flip=self.engine_configs.augmentation.b_vertical_flip)
 
                     y_data = ImageDataGenerator(rotation_range=self.engine_configs.augmentation.i_rotation_range,
                                                 width_shift_range=self.engine_configs.augmentation.f_width_shift,
@@ -133,8 +139,7 @@ class FullyConvolutionalNetwork(object):
                                                 zoom_range=self.engine_configs.augmentation.f_zoom_range,
                                                 fill_mode=self.engine_configs.augmentation.s_fill_mode,
                                                 horizontal_flip=self.engine_configs.augmentation.b_horizontal_flip,
-                                                vertical_flip=self.engine_configs.augmentation.b_vertical_flip,
-                                                validation_split=val_split)
+                                                vertical_flip=self.engine_configs.augmentation.b_vertical_flip)
                 except:
                     self.errors.append('Level3Error:CouldNotEstablish2dDataAugmentationGenerators')
 
@@ -169,27 +174,13 @@ class FullyConvolutionalNetwork(object):
             try:
                 X_data.fit(self.engine_configs.train_data.trainX, rounds=2, seed=1)
                 X_flow = X_data.flow(self.engine_configs.train_data.trainX,
-                                     batch_size=self.engine_configs.train_options.i_batchSize,
-                                     subset='training')
+                                     batch_size=self.engine_configs.train_options.i_batchSize)
 
                 y_data.fit(self.engine_configs.train_data.trainY, rounds=2, seed=1)
                 y_flow = y_data.flow(self.engine_configs.train_data.trainY,
-                                     batch_size=self.engine_configs.train_options.i_batchSize,
-                                     subset='training')
+                                     batch_size=self.engine_configs.train_options.i_batchSize)
 
                 train_generator = zip(X_flow, y_flow)
-
-                if val_split > 0.0 and val_data is None:
-                    X_flow = X_data.flow(self.engine_configs.train_data.trainX,
-                                         batch_size=self.engine_configs.train_options.i_batchSize,
-                                         subset='validation')
-
-                    y_flow = y_data.flow(self.engine_configs.train_data.trainY,
-                                         batch_size=self.engine_configs.train_options.i_batchSize,
-                                         subset='validation')
-
-                    val_data = zip(X_flow, y_flow)
-                    val_steps = np.ceil(self.engine_configs.train_data.trainX.shape[0] * val_split / self.engine_configs.train_options.i_batchSize)
 
             except:
                self.errors.append('Level3Error:CouldNotConstructDataAugmentationGenerator')
