@@ -69,7 +69,7 @@ def main(FLAGS):
         configs['training_configurations']['validation_split'] = '0.0'
 
         # set the learning rate
-        configs['learning_rate_schedule']['learning_rate'] = FLAGS.learning_rate
+        configs['learning_rate_schedule']['learning_rate'] = '{}'.format(FLAGS.learning_rate)
 
         # turn on savers
         configs['save_configurations']['save_checkpoints_switch'] = 'True'
