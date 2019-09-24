@@ -34,5 +34,5 @@ class HelpMenuConstructor(tk.Menu):
 
     @staticmethod
     def github_clicked():
-        url = 'http://dlae.io'
+        url = 'http://github.com/jeremiahws/dlae'
         webbrowser.open(url, new=1)

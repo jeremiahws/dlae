@@ -22,7 +22,9 @@ class OptionsMenuVariables(object):
         ##############################################################################
         # Variables for loss submenu
         ##############################################################################
-        self.o_loss = ('categorical_crossentropy', 'sparse_categorical_crossentropy', 'mean_squared_error', 'mean_absolute_error', 'tversky', 'pix2pix', 'cyclegan', 'ssd')
+        self.o_loss = ('categorical_crossentropy', 'sparse_categorical_crossentropy', 'mean_squared_error',
+                       'mean_absolute_error', 'tversky', 'pix2pix', 'cyclegan', 'ssd',
+                       'jaccard', 'focal', 'soft_dice')
         self.s_loss = tk.StringVar(value=self.o_loss[0])
         self.s_loss_param1 = tk.StringVar(value="0.0")
         self.s_loss_param2 = tk.StringVar(value="0.0")

@@ -26,6 +26,7 @@ class Augmentation:
 
         self.l_augmentation = tk.Label(self.tl_augmentation, text='Apply augmentation:').grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.c_augmentation = tk.Checkbutton(self.tl_augmentation, variable=controller.data_menu.bool_augmentation).grid(row=0, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.e_rounds = tk.Entry(self.tl_augmentation, textvariable=controller.data_menu.s_rounds).grid(row=0, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
 
         self.l_centering = tk.Label(self.tl_augmentation, text='Centering featurewise, samplewise:').grid(row=1, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.c_fw_centering = tk.Checkbutton(self.tl_augmentation, variable=controller.data_menu.bool_fw_centering).grid(row=1, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
@@ -54,15 +55,21 @@ class Augmentation:
         self.l_channel_shift_range = tk.Label(self.tl_augmentation, text='Channel shift range:').grid(row=8, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.e_channel_shift_range = tk.Entry(self.tl_augmentation, textvariable=controller.data_menu.s_channel_shift_range).grid(row=8, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
 
-        self.l_fill_mode = tk.Label(self.tl_augmentation, text='Fill mode:').grid(row=9, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.l_zca_whiten = tk.Label(self.tl_augmentation, text='ZCA whitening:').grid(row=9, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.e_zca_whiten = tk.Entry(self.tl_augmentation, textvariable=controller.data_menu.s_zca_epsilon).grid(row=9, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
+
+        self.l_fill_mode = tk.Label(self.tl_augmentation, text='Fill mode:').grid(row=10, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.om_fill_mode = tk.OptionMenu(self.tl_augmentation, controller.data_menu.s_fill_mode, *controller.data_menu.o_fill_mode)
         self.om_fill_mode.config()
-        self.om_fill_mode.grid(row=9, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.e_fill_mode = tk.Entry(self.tl_augmentation, textvariable=controller.data_menu.s_cval).grid(row=9, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.om_fill_mode.grid(row=10, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.e_fill_mode = tk.Entry(self.tl_augmentation, textvariable=controller.data_menu.s_cval).grid(row=10, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
 
-        self.l_flips = tk.Label(self.tl_augmentation, text='Horizontal, vertical flips:').grid(row=10, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.c_horizontal_flip = tk.Checkbutton(self.tl_augmentation, variable=controller.data_menu.bool_horizontal_flip).grid(row=10, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.c_vertical_flip = tk.Checkbutton(self.tl_augmentation, variable=controller.data_menu.bool_vertical_flip).grid(row=10, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.l_flips = tk.Label(self.tl_augmentation, text='Horizontal, vertical flips:').grid(row=11, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.c_horizontal_flip = tk.Checkbutton(self.tl_augmentation, variable=controller.data_menu.bool_horizontal_flip).grid(row=11, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.c_vertical_flip = tk.Checkbutton(self.tl_augmentation, variable=controller.data_menu.bool_vertical_flip).grid(row=11, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
+
+        self.l_random_seed = tk.Label(self.tl_augmentation, text='Random seed:').grid(row=12, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.e_random_seed = tk.Entry(self.tl_augmentation, textvariable=controller.data_menu.s_random_seed).grid(row=12, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
 
         self.tl_augmentation.withdraw()
 
