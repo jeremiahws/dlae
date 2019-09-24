@@ -18,19 +18,12 @@
   "minimum_image_intensity": "0.0",
   "maximum_image_intensity": "4096.0",
   "image_context": "3D",
-  "normalization_type": "X from [0, 1]",
+  "normalization_type": "samplewise_unity_x",
   "categorical_switch": "False",
   "weight_loss_switch": "False",
-  "reshape_X_switch": "False",
-  "reshape_X_dimensions": "",
-  "permute_X_switch": "False",
-  "permute_X_dimensions": "",
   "repeat_X_switch": "False",
   "repeat_X_quantity": "",
-  "reshape_y_switch": "False",
-  "reshape_y_dimensions": "",
-  "permute_y_switch": "False",
-  "permute_y_dimensions": ""
+  "categories": "2"
  },
  "augmentation": {
   "apply_augmentation_switch": "True",
@@ -48,7 +41,10 @@
   "fill_mode": "nearest",
   "cval": "0.0",
   "horizontal_flip_switch": "True",
-  "vertical_flip_switch": "True"
+  "vertical_flip_switch": "True",
+  "rounds": "1",
+  "random_seed": "1",
+  "zca_epsilon": "None"
  },
  "loss_function": {
   "loss": "sparse_categorical_crossentropy",
@@ -85,7 +81,7 @@
   "batch_size": "32",
   "epochs": "500",
   "shuffle_data_switch": "True",
-  "validation_split": "0.2"
+  "validation_split": "0.0"
  },
  "monitors": {
   "mse_switch": "False",
