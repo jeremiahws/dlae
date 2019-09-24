@@ -46,17 +46,19 @@ def main(FLAGS):
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'xception_unet.json'))
 
         # apply some augmentation
-        configs['augmentation']['apply_augmentation_switch'] = 'True'
-        configs['augmentation']['width_shift'] = '0.15'
-        configs['augmentation']['height_shift'] = '0.15'
-        configs['augmentation']['rotation_range'] = '10'
+        configs['augmentation']['apply_augmentation_switch'] = 'False'
+        #configs['augmentation']['width_shift'] = '0.15'
+        #configs['augmentation']['height_shift'] = '0.15'
+        configs['augmentation']['rotation_range'] = '3'
         configs['augmentation']['zoom_range'] = '0.15'
-        configs['augmentation']['shear_range'] = '0.175'
+        configs['augmentation']['shear_range'] = '0.05'
 
         # perform some preprocessing
         configs['preprocessing']['categorical_switch'] = 'True'
         configs['preprocessing']['minimum_image_intensity'] = '0.0'
-        configs['preprocessing']['maximum_image_intensity'] = '255.0'
+        configs['preprocessing']['maximum_image_intensity'] = '2048.0'
+        configs['preprocessing']['categories'] = '{}'.format(FLAGS.classes)
+        configs['preprocessing']['normalization_type'] = '{}'.format(FLAGS.normalization)
 
         # set the training configurations
         if FLAGS.num_gpus > 1:
@@ -253,6 +255,10 @@ if __name__ == '__main__':
     parser.add_argument('--classes', type=int,
                         default=1,
                         help='Number of object classes.')
+
+    parser.add_argument('--normalization', type=str,
+                        default='samplewise_unity_x',
+                        help='Type of image normalization.')
 
     parser.add_argument('--batch_size', type=int,
                         default=1,
