@@ -91,3 +91,25 @@ def read_bbd_X_Y(X_path, Y_path):
         images = [f_X[key].value for key in f_X_keys]
         annos = [f_Y[key].value for key in f_Y_keys]
         return images, annos
+
+
+def check_keys(X_path, Y_path):
+    f_X = h5py.File(X_path, 'r')
+    f_X_keys = list(f_X.keys())
+    f_Y = h5py.File(Y_path, 'r')
+    f_Y_keys = list(f_Y.keys())
+    different = list(set(f_X_keys) - set(f_Y_keys))
+
+    if any(different):
+        return False
+
+    else:
+        return True
+
+
+def get_keys(path):
+    f = h5py.File(path, 'r')
+    f_keys = list(f.keys())
+    f.close()
+
+    return f_keys

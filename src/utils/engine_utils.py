@@ -313,8 +313,11 @@ def level_one_error_checking(configs):
     else:
         errors.append('Level1Error:NonexistentImageContext')
 
-    if any(configs['preprocessing']['normalization_type'] in x for x in ['X from [0, 1]', 'X from [-1, 1]', 'X, Y from [0, 1]', 'X, Y from [-1, 1]', 'none']):
-        if any(configs['preprocessing']['normalization_type'] in x for x in ['X from [0, 1]', 'X from [-1, 1]']):
+    if any(configs['preprocessing']['normalization_type'] in x for x in ['samplewise_unity_x', 'samplewise_negpos_x',
+                                                                         'global_unity_x', 'global_negpos_x',
+                                                                         'samplewise_unity_xy', 'samplewise_negpos_xy',
+                                                                         'global_unity_xy', 'global_negpos_xy', 'none']):
+        if any(configs['preprocessing']['normalization_type'] in x for x in ['global_unity_x', 'global_negpos_x']):
             if any(configs['preprocessing']['minimum_image_intensity']):
                 try:
                     float(configs['preprocessing']['minimum_image_intensity'])
@@ -331,7 +334,7 @@ def level_one_error_checking(configs):
             else:
                 errors.append('Level1Error:SpecifyMaximumImageIntensitytoPerformNormalization')
 
-        elif any(configs['preprocessing']['normalization_type'] in x for x in ['X, Y from [0, 1]', 'X, Y from [-1, 1]']):
+        elif any(configs['preprocessing']['normalization_type'] in x for x in ['global_unity_xy', 'global_negpos_xy']):
             try:
                 minimums = configs['preprocessing']['minimum_image_intensity'].split(',')
                 if len(minimums) == 2:
@@ -366,37 +369,20 @@ def level_one_error_checking(configs):
         warnings.append('Warning:ConvertToCategoricalSwitchShouldBeBool')
         configs['preprocessing']['categorical_switch'] = 'False'
 
+    if any(configs['preprocessing']['categories']):
+        try:
+            int(configs['preprocessing']['categories'])
+        except ValueError:
+            warnings.append('Warning:NumberOfCategoriesShouldBeInt')
+            configs['preprocessing']['categories'] = '2'
+    else:
+        configs['preprocessing']['categories'] = '2'
+
     try:
         str2bool(configs['preprocessing']['weight_loss_switch'])
     except ValueError:
         warnings.append('Warning:WeightLossFunctionSwitchShouldBeBool')
         configs['preprocessing']['weight_loss_switch'] = 'False'
-
-    try:
-        str2bool(configs['preprocessing']['reshape_X_switch'])
-    except ValueError:
-        warnings.append('Warning:ReshapeXSwitchShouldBeBool')
-        configs['preprocessing']['reshape_X_switch'] = 'False'
-
-    if any(configs['preprocessing']['reshape_X_dimensions']):
-        try:
-            if type(literal_eval(configs['preprocessing']['reshape_X_dimensions'])) is not tuple:
-                errors.append('Level1Error:ReshapeXDimensionsShouldBeTuple')
-        except ValueError:
-            errors.append('Level1Error:ReshapeXDimensionsShouldBeTuple')
-
-    try:
-        str2bool(configs['preprocessing']['permute_X_switch'])
-    except ValueError:
-        warnings.append('Warning:PermuteXSwitchShouldBeBool')
-        configs['preprocessing']['permute_X_switch'] = 'False'
-
-    if any(configs['preprocessing']['permute_X_dimensions']):
-        try:
-            if type(literal_eval(configs['preprocessing']['permute_X_dimensions'])) is not tuple:
-                errors.append('Level1Error:PermuteXDimensionsShouldBeTuple')
-        except ValueError:
-            errors.append('Level1Error:PermuteXDimensionsShouldBeTuple')
 
     try:
         str2bool(configs['preprocessing']['repeat_X_switch'])
@@ -409,32 +395,9 @@ def level_one_error_checking(configs):
             int(configs['preprocessing']['repeat_X_quantity'])
         except ValueError:
             warnings.append('Warning:RepeatXQuantityShouldBeInt')
-
-    try:
-        str2bool(configs['preprocessing']['reshape_y_switch'])
-    except ValueError:
-        warnings.append('Warning:ReshapeySwitchShouldBeBool')
-        configs['preprocessing']['reshape_y_switch'] = 'False'
-
-    if any(configs['preprocessing']['reshape_y_dimensions']):
-        try:
-            if type(literal_eval(configs['preprocessing']['reshape_y_dimensions'])) is not tuple:
-                errors.append('Level1Error:ReshapeyDimensionsShouldBeTuple')
-        except ValueError:
-            errors.append('Level1Error:ReshapeyDimensionsShouldBeTuple')
-
-    try:
-        str2bool(configs['preprocessing']['permute_y_switch'])
-    except ValueError:
-        warnings.append('Warning:PermuteySwitchShouldBeBool')
-        configs['preprocessing']['permute_y_switch'] = 'False'
-
-    if any(configs['preprocessing']['permute_y_dimensions']):
-        try:
-            if type(literal_eval(configs['preprocessing']['permute_y_dimensions'])) is not tuple:
-                errors.append('Level1Error:PermuteyDimensionsShouldBeTuple')
-        except ValueError:
-            errors.append('Level1Error:PermuteyDimensionsShouldBeTuple')
+            configs['preprocessing']['repeat_X_quantity'] = '3'
+    else:
+        configs['preprocessing']['repeat_X_quantity'] = '3'
 
     try:
         str2bool(configs['augmentation']['apply_augmentation_switch'])
@@ -472,7 +435,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:WidthShiftShouldBeFloat')
     else:
-        configs['augmentation']['width_shift'] = 0.1
+        configs['augmentation']['width_shift'] = '0.1'
 
     if any(configs['augmentation']['height_shift']):
         try:
@@ -480,7 +443,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:HeightShiftShouldBeFloat')
     else:
-        configs['augmentation']['height_shift'] = 0.1
+        configs['augmentation']['height_shift'] = '0.1'
 
     if any(configs['augmentation']['rotation_range']):
         try:
@@ -488,7 +451,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:RotationRangeShouldBeInt')
     else:
-        configs['augmentation']['rotation_range'] = 0
+        configs['augmentation']['rotation_range'] = '0'
 
     if any(configs['augmentation']['brightness_range']):
         try:
@@ -496,7 +459,7 @@ def level_one_error_checking(configs):
                     or literal_eval(configs['augmentation']['brightness_range']) is None:
                 pass
         except ValueError:
-            warnings.append('Warning:OptimizerBrightnessRangeShouldBeTupleorNone')
+            warnings.append('Warning:rBrightnessRangeShouldBeTupleorNone')
             configs['augmentation']['brightness_range'] = 'None'
     else:
         configs['augmentation']['brightness_range'] = 'None'
@@ -507,7 +470,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:ShearRangeShouldBeFloat')
     else:
-        configs['augmentation']['shear_range'] = 0.0
+        configs['augmentation']['shear_range'] = '0.0'
 
     if any(configs['augmentation']['zoom_range']):
         try:
@@ -515,7 +478,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:ZoomRangeShouldBeFloat')
     else:
-        configs['augmentation']['zoom_range'] = 0.0
+        configs['augmentation']['zoom_range'] = '0.0'
 
     if any(configs['augmentation']['channel_shift_range']):
         try:
@@ -523,7 +486,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:ChannelShiftRangeShouldBeFloat')
     else:
-        configs['augmentation']['channel_shift_range'] = 0.0
+        configs['augmentation']['channel_shift_range'] = '0.0'
 
     if any(configs['augmentation']['fill_mode'] in x for x in ['nearest', 'constant', 'reflect', 'wrap']):
         pass
@@ -536,7 +499,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:CvalShouldBeFloat')
     else:
-        configs['augmentation']['cval'] = 0.0
+        configs['augmentation']['cval'] = '0.0'
 
     try:
         str2bool(configs['augmentation']['horizontal_flip_switch'])
@@ -550,10 +513,39 @@ def level_one_error_checking(configs):
         warnings.append('Warning:VerticalFlipSwitchShouldBeBool')
         configs['augmentation']['vertical_flip_switch'] = 'False'
 
+    if any(configs['augmentation']['zca_epsilon']):
+        try:
+            if type(literal_eval(configs['augmentation']['zca_epsilon'])) is float\
+                    or literal_eval(configs['augmentation']['zca_epsilon']) is None:
+                pass
+        except ValueError:
+            warnings.append('Warning:ZCAWhiteningEpsilonShouldBeFloatorNone')
+            configs['augmentation']['zca_epsilon'] = 'None'
+    else:
+        configs['augmentation']['zca_epsilon'] = 'None'
+
+    if any(configs['augmentation']['random_seed']):
+        try:
+            int(configs['augmentation']['random_seed'])
+        except ValueError:
+            warnings.append('Warning:RandomSeedShouldBeInt')
+            configs['augmentation']['random_seed'] = '1'
+    else:
+        configs['augmentation']['random_seed'] = '1'
+
+    if any(configs['augmentation']['rounds']):
+        try:
+            int(configs['augmentation']['rounds'])
+        except ValueError:
+            warnings.append('Warning:RoundsShouldBeInt')
+            configs['augmentation']['rounds'] = '1'
+    else:
+        configs['augmentation']['rounds'] = '1'
+
     if any(configs['loss_function']['loss'] in x for x in ['categorical_crossentropy',
                                                            'sparse_categorical_crossentropy', 'mean_squared_error',
                                                            'mean_absolute_error', 'tversky', 'pix2pix',
-                                                           'cyclegan', 'ssd']):
+                                                           'cyclegan', 'ssd', 'jaccard', 'focal', 'soft_dice']):
         pass
     else:
         errors.append('Level1Error:NonexistentLossFunction')
@@ -564,7 +556,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:Parameter1ShouldBeFloat')
     else:
-        configs['loss_function']['parameter1'] = 0.0
+        configs['loss_function']['parameter1'] = '0.0'
 
     if any(configs['loss_function']['parameter2']):
         try:
@@ -572,7 +564,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:Parameter2ShouldBeFloat')
     else:
-        configs['loss_function']['parameter2'] = 0.0
+        configs['loss_function']['parameter2'] = '0.0'
 
     if any(configs['learning_rate_schedule']['learning_rate']):
         try:
@@ -580,7 +572,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:LearningRateShouldBeFloat')
     else:
-        configs['learning_rate_schedule']['learning_rate'] = 0.0001
+        configs['learning_rate_schedule']['learning_rate'] = '0.0001'
 
     if any(configs['learning_rate_schedule']['learning_rate_decay_factor']):
         try:
@@ -588,7 +580,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:LearningRateDecayFactorShouldBeFloat')
     else:
-        configs['learning_rate_schedule']['learning_rate_decay_factor'] = 0.0
+        configs['learning_rate_schedule']['learning_rate_decay_factor'] = '0.0'
 
     try:
         str2bool(configs['learning_rate_schedule']['decay_on_plateau_switch'])
@@ -602,7 +594,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:DecayOnPlateauFactorShouldBeFloat')
     else:
-        configs['learning_rate_schedule']['decay_on_plateau_factor'] = 0.0
+        configs['learning_rate_schedule']['decay_on_plateau_factor'] = '0.0'
 
     if any(configs['learning_rate_schedule']['decay_on_plateau_patience']):
         try:
@@ -610,7 +602,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:DecayOnPlateauPatienceShouldBeInt')
     else:
-        configs['learning_rate_schedule']['decay_on_plateau_patience'] = 3
+        configs['learning_rate_schedule']['decay_on_plateau_patience'] = '3'
 
     try:
         str2bool(configs['learning_rate_schedule']['step_decay_switch'])
@@ -624,7 +616,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:StepDecayFactorShouldBeFloat')
     else:
-        configs['learning_rate_schedule']['step_decay_factor'] = 0.0
+        configs['learning_rate_schedule']['step_decay_factor'] = '0.0'
 
     if any(configs['learning_rate_schedule']['step_decay_period']):
         try:
@@ -632,7 +624,7 @@ def level_one_error_checking(configs):
         except ValueError:
             warnings.append('Warning:StepDecayPeriodShouldBeInt')
     else:
-        configs['learning_rate_schedule']['step_decay_period'] = 3
+        configs['learning_rate_schedule']['step_decay_period'] = '3'
 
     if any(configs['learning_rate_schedule']['discriminator_learning_rate']):
         try:
@@ -1207,7 +1199,7 @@ def get_io(layer_definitions):
     x = None
 
     for i, layer_definition in enumerate(layer_definitions):
-        # try:
+        try:
             layer = create_layer(layer_definition)
 
             if i == 0:
@@ -1219,7 +1211,7 @@ def get_io(layer_definitions):
                     inputs = layer.keras_layer
 
             elif i == 1:
-                # try:
+                try:
                     if layer.type in ['Xception', 'VGG16', 'VGG19', 'ResNet50', 'ResNet101', 'ResNet152',
                                       'ResNet50V2', 'ResNet101V2', 'ResNet152V2', 'ResNeXt50', 'ResNeXt101',
                                       'InceptionV3', 'InceptionResNetV2', 'DenseNet121', 'DenseNet169',
@@ -1232,38 +1224,38 @@ def get_io(layer_definitions):
                             bbd_hooks = layer.hooks
                     else:
                         x = layer.keras_layer(inputs)
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
             elif layer.type == 'Resize convolution 2D' or layer.type == 'Resize convolution 3D':
-                # try:
+                try:
                     x = layer.keras_upsample_layer(x)
                     x = layer.keras_conv_layer(x)
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
             elif layer.type == 'Outer skip source':
-                # try:
+                try:
                     outer_skip_starts.append(x)
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
             elif layer.type in ['Xception', 'VGG16', 'VGG19', 'ResNet50', 'ResNet101', 'ResNet152',
                                 'ResNet50V2', 'ResNet101V2', 'ResNet152V2', 'ResNeXt50', 'ResNeXt101',
                                 'InceptionV3', 'InceptionResNetV2', 'DenseNet121', 'DenseNet169',
                                 'DenseNet201', 'MobileNet', 'MobileNetV2']:
-                # try:
+                try:
                     inputs = layer.keras_layer.input
                     x = layer.keras_layer.output
                     if literal_eval(layer.include_skips):
                         outer_skip_starts = layer.skips
                     if literal_eval(layer.include_hooks):
                         bbd_hooks = layer.hooks
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
             elif layer.type == 'Outer skip target':
-                # try:
+                try:
                     if layer.skip_type == 'concatenate':
                         x = keras.layers.Concatenate()([outer_skip_starts[-1], x])
 
@@ -1284,17 +1276,17 @@ def get_io(layer_definitions):
 
                     outer_skip_starts.pop()
 
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
             elif layer.type == 'Inner skip source':
-                # try:
+                try:
                     inner_skip_starts.append(x)
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
             elif layer.type == 'Inner skip target':
-                # try:
+                try:
                     if layer.skip_type == 'concatenate':
                         x = keras.layers.Concatenate()([inner_skip_starts[0], x])
 
@@ -1314,23 +1306,23 @@ def get_io(layer_definitions):
                         x = keras.layers.Maximum()([inner_skip_starts[0], x])
 
                     inner_skip_starts.pop()
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
             elif layer.type == 'Hook connection source':
-                # try:
+                try:
                     bbd_hooks.append(x)
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
             else:
-                # try:
+                try:
                     x = layer.keras_layer(x)
-                # except:
-                #     errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
+                except:
+                    errors.append('Level3Error:CouldNotAdd ' + layer.type + ' AsALayer')
 
-        # except:
-        #     errors.append('Level3Error:CouldNotCreateLayerFromLayerSpecifications')
+        except:
+            errors.append('Level3Error:CouldNotCreateLayerFromLayerSpecifications')
 
     return inputs, x, bbd_hooks, errors
 
