@@ -51,8 +51,8 @@ class TverskyLoss:
         g0 = y_true
         g1 = ones - y_true
 
-        num = keras.backend.tensorflow_backend.sum(p0 * g0, (0, 1, 2))
-        den = num + self.alpha * keras.backend.tensorflow_backend.sum(p0 * g1, (0, 1, 2)) + self.beta * keras.backend.tensorflow_backend.sum(p1 * g0, (0, 1, 2))
+        num = keras.backend.tensorflow_backend.sum(p0 * g0, (0, 1, 2, 3))
+        den = num + self.alpha * keras.backend.tensorflow_backend.sum(p0 * g1, (0, 1, 2, 3)) + self.beta * keras.backend.tensorflow_backend.sum(p1 * g0, (0, 1, 2, 3))
 
         T = keras.backend.tensorflow_backend.sum(num / den)
         Ncl = keras.backend.tensorflow_backend.cast(keras.backend.tensorflow_backend.shape(y_true)[-1], 'float32')
@@ -60,33 +60,67 @@ class TverskyLoss:
         return Ncl - T
 
 
-# pulled from https://gist.github.com/wassname/f1452b748efcbeb4cb9b1d059dce6f96
-def jaccard_distance_loss(y_true, y_pred, smooth=100):
-    """
-    Jaccard = (|X & Y|)/ (|X|+ |Y| - |X & Y|)
-            = sum(|A*B|)/(sum(|A|)+sum(|B|)-sum(|A*B|))
+# https://github.com/keras-team/keras-contrib/blob/master/keras_contrib/losses/jaccard.py
+class JaccardLoss:
+    def __init__(self, smooth=100):
+        self.smooth = smooth
 
-    The jaccard distance loss is usefull for unbalanced datasets. This has been
-    shifted so it converges on 0 and is smoothed to avoid exploding or disapearing
-    gradient.
-
-    Ref: https://en.wikipedia.org/wiki/Jaccard_index
-
-    @url: https://gist.github.com/wassname/f1452b748efcbeb4cb9b1d059dce6f96
-    @author: wassname
-    """
-    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    sum_ = K.sum(K.abs(y_true) + K.abs(y_pred), axis=-1)
-    jac = (intersection + smooth) / (sum_ - intersection + smooth)
-    return (1 - jac) * smooth
+    def compute_loss(self, y_true, y_pred):
+        """Jaccard distance for semantic segmentation.
+        Also known as the intersection-over-union loss.
+        This loss is useful when you have unbalanced numbers of pixels within an image
+        because it gives all classes equal weight. However, it is not the defacto
+        standard for image segmentation.
+        For example, assume you are trying to predict if
+        each pixel is cat, dog, or background.
+        You have 80% background pixels, 10% dog, and 10% cat.
+        If the model predicts 100% background
+        should it be be 80% right (as with categorical cross entropy)
+        or 30% (with this loss)?
+        The loss has been modified to have a smooth gradient as it converges on zero.
+        This has been shifted so it converges on 0 and is smoothed to avoid exploding
+        or disappearing gradient.
+        Jaccard = (|X & Y|)/ (|X|+ |Y| - |X & Y|)
+                = sum(|A*B|)/(sum(|A|)+sum(|B|)-sum(|A*B|))
+        # Arguments
+            y_true: The ground truth tensor.
+            y_pred: The predicted tensor
+            smooth: Smoothing factor. Default is 100.
+        # Returns
+            The Jaccard distance between the two tensors.
+        # References
+            - [What is a good evaluation measure for semantic segmentation?](
+               http://www.bmva.org/bmvc/2013/Papers/paper0032/paper0032.pdf)
+        """
+        intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
+        sum_ = K.sum(K.abs(y_true) + K.abs(y_pred), axis=-1)
+        jac = (intersection + self.smooth) / (sum_ - intersection + self.smooth)
+        return (1 - jac) * self.smooth
 
 
 # pulled from https://github.com/keras-team/keras/issues/6261
-def focal_loss(y_true, y_pred, gamma=2):
-    y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
-    eps = K.epsilon()
-    y_pred = K.clip(y_pred, eps, 1. - eps)
-    return -K.sum(K.pow(1. - y_pred, gamma) * y_true * K.log(y_pred), axis=-1)
+class FocalLoss:
+    def __init__(self, alpha=0.25, gamma=2):
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def compute_loss(self, y_true, y_pred):
+        y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
+        eps = K.epsilon()
+        y_pred = K.clip(y_pred, eps, 1. - eps)
+        return -self.alpha * K.sum(K.pow(1. - y_pred, self.gamma) * y_true * K.log(y_pred), axis=-1)
+
+
+# https://github.com/jocicmarko/ultrasound-nerve-segmentation/blob/master/train.py
+class SoftDiceLoss:
+    def __init__(self, smooth=1e-6):
+        self.smooth = smooth
+
+    def compute_loss(self, y_true, y_pred):
+        y_true_f = K.flatten(y_true)
+        y_pred_f = K.flatten(y_pred)
+        intersection = K.sum(y_true_f * y_pred_f)
+        return 1 - (2. * intersection + self.smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + self.smooth)
 
 
 # Pulled from: https://github.com/pierluigiferrari/ssd_keras/blob/master/keras_loss_function/keras_ssd_loss.py

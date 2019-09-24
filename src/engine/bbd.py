@@ -23,7 +23,6 @@ import datetime
 import time
 from src.utils.general_utils import write_hdf5
 from src.utils.ssd_utils import *
-from math import floor
 
 
 class BoundingBoxDetector(object):
@@ -158,100 +157,49 @@ class BoundingBoxDetector(object):
                                metrics=self.engine_configs.monitors.monitors)
 
     def train_graph(self):
-        try:
-            if self.engine_configs.val_data.valX is not None \
-                    and self.engine_configs.train_options.f_validationSplit > 0.0:
-                val_data = DataGenerator(images=self.engine_configs.val_data.valX,
-                                         labels=self.engine_configs.val_data.valY)
+        if self.engine_configs.val_data.val_generator is not None:
+            val_steps = len(self.engine_configs.val_data.val_generator)
+        else:
+            val_steps = None
 
-                val_data_size = val_data.get_dataset_size()
-                val_steps = np.ceil(val_data_size / self.engine_configs.train_options.i_batchSize)
-
-                val_generator = val_data.generate(batch_size=self.engine_configs.train_options.i_batchSize,
-                                                  shuffle=False,
-                                                  transformations=[],
-                                                  label_encoder=self.input_encoder,
-                                                  returns={'processed_images',
-                                                           'encoded_labels'},
-                                                  keep_images_without_gt=False)
-            elif self.engine_configs.val_data.valX is None and self.engine_configs.train_options.f_validationSplit > 0:
-                val_split = self.engine_configs.train_options.f_validationSplit
-                n_tot_imgs = len(self.engine_configs.train_data.trainX)
-                n_val_imgs = floor(val_split * n_tot_imgs)
-                self.engine_configs.val_data.valX = self.engine_configs.train_data.trainX[:n_val_imgs]
-                self.engine_configs.val_data.valY = self.engine_configs.train_data.trainY[:n_val_imgs]
-                self.engine_configs.train_data.trainX = self.engine_configs.train_data.trainX[n_val_imgs:]
-                self.engine_configs.train_data.trainY = self.engine_configs.train_data.trainY[n_val_imgs:]
-
-                val_data = DataGenerator(images=self.engine_configs.val_data.valX,
-                                         labels=self.engine_configs.val_data.valY)
-
-                val_data_size = val_data.get_dataset_size()
-                val_steps = np.ceil(val_data_size / self.engine_configs.train_options.i_batchSize)
-
-                val_generator = val_data.generate(batch_size=self.engine_configs.train_options.i_batchSize,
-                                                  shuffle=False,
-                                                  transformations=[],
-                                                  label_encoder=self.input_encoder,
-                                                  returns={'processed_images',
-                                                           'encoded_labels'},
-                                                  keep_images_without_gt=False)
-            else:
-                # No validation data
-                val_steps = None
-                val_generator = None
-
-        except:
-            self.errors.append('Level3Error:CouldNotDetermineBbdValidationData')
-
-        data_augmentation_chain = DataAugmentationConstantInputSize(random_brightness=(-48, 48, 0.5),
-                                                                    random_contrast=(0.5, 1.8, 0.5),
-                                                                    random_saturation=(0.5, 1.8, 0.5),
-                                                                    random_hue=(18, 0.5),
-                                                                    random_flip=0.5,
-                                                                    random_translate=((0.03, 0.5), (0.03, 0.5), 0.5),
-                                                                    random_scale=(0.5, 2.0, 0.5),
-                                                                    n_trials_max=3,
-                                                                    clip_boxes=True,
-                                                                    overlap_criterion='area',
-                                                                    bounds_box_filter=(0.3, 1.0),
-                                                                    bounds_validator=(0.5, 1.0),
-                                                                    n_boxes_min=1,
-                                                                    background=(0, 0, 0),
-                                                                    data_min=float(self.engine_configs.data_preprocessing.f_minImageIntensity),
-                                                                    data_max=float(self.engine_configs.data_preprocessing.f_maxImageIntensity))
-        train_data = DataGenerator(images=self.engine_configs.train_data.trainX,
-                                   labels=self.engine_configs.train_data.trainY)
-        train_data_size = train_data.get_dataset_size()
-        steps_per_epoch = np.ceil(train_data_size / self.engine_configs.train_options.i_batchSize)
-        final_epoch = self.engine_configs.train_options.i_epochs
-
-        train_generator = train_data.generate(batch_size=self.engine_configs.train_options.i_batchSize,
-                                              shuffle=True,
-                                              transformations=[data_augmentation_chain],
-                                              label_encoder=self.input_encoder,
-                                              returns={'processed_images',
-                                                       'encoded_labels'},
-                                              keep_images_without_gt=False)
+        if self.engine_configs.augmentation.b_augmentation is True:
+            aug_chain = DataAugmentationConstantInputSize(random_flip=0.5,
+                                                          random_translate=((0.03, 0.5), (0.03, 0.5), 0.5),
+                                                          random_scale=(0.5, 2.0, 0.5),
+                                                          n_trials_max=self.engine_configs.augmentation.i_rounds,
+                                                          clip_boxes=True,
+                                                          overlap_criterion='area',
+                                                          bounds_box_filter=(0.3, 1.0),
+                                                          bounds_validator=(0.5, 1.0),
+                                                          n_boxes_min=1,
+                                                          background=(0, 0, 0),
+                                                          data_min=0.0,
+                                                          data_max=1.0)
+            aug_chain = [aug_chain]
+        else:
+            aug_chain = []
 
         with self.graph.as_default():
             if self.engine_configs.train_options.i_nGpus > 1:
-                self.parallel_model.fit_generator(generator=train_generator,
-                                                  steps_per_epoch=steps_per_epoch,
-                                                  epochs=final_epoch,
+                self.parallel_model.fit_generator(generator=self.engine_configs.train_data.train_generator.generate(transformations=aug_chain,
+                                                                                                                    label_encoder=self.input_encoder),
+                                                  steps_per_epoch=len(self.engine_configs.train_data.train_generator),
+                                                  epochs=self.engine_configs.train_options.i_epochs,
                                                   callbacks=self.engine_configs.callbacks.callbacks,
-                                                  validation_data=val_generator,
+                                                  validation_data=self.engine_configs.val_data.val_generator.generate(transformations=[],
+                                                                                                                      label_encoder=self.input_encoder),
                                                   validation_steps=val_steps,
                                                   initial_epoch=0)
             else:
-                self.model.fit_generator(generator=train_generator,
-                                         steps_per_epoch=steps_per_epoch,
-                                         epochs=final_epoch,
+                self.model.fit_generator(generator=self.engine_configs.train_data.train_generator.generate(transformations=aug_chain,
+                                                                                                           label_encoder=self.input_encoder),
+                                         steps_per_epoch=len(self.engine_configs.train_data.train_generator),
+                                         epochs=self.engine_configs.train_options.i_epochs,
                                          callbacks=self.engine_configs.callbacks.callbacks,
-                                         validation_data=val_generator,
+                                         validation_data=self.engine_configs.val_data.val_generator.generate(transformations=[],
+                                                                                                             label_encoder=self.input_encoder),
                                          validation_steps=val_steps,
                                          initial_epoch=0)
-        pass
 
     def retrain_graph(self):
         pass
@@ -259,7 +207,8 @@ class BoundingBoxDetector(object):
     def predict_on_graph(self):
         try:
             self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath)
-            predictions = self.model.predict(self.engine_configs.test_data.testX)
+            predictions = self.model.predict_generator(self.engine_configs.test_data.testX.test_generator.generate(),
+                                                       steps=len(self.engine_configs.test_data.testX.test_generator))
             predictions = decode_detections(predictions,
                                             confidence_thresh=self.engine_configs.train_options.f_confidenceThreshold,
                                             iou_threshold=self.engine_configs.train_options.f_iouThreshold,

@@ -17,11 +17,14 @@ Contains classes to construct the engine configurations from a configuration str
 """
 
 
-import numpy as np
 import keras
 from ast import literal_eval
-from src.utils.general_utils import str2bool, read_hdf5, read_bbd_X_Y, read_hdf5_multientry
-from src.engine.loss_functions import TverskyLoss, SSDLoss
+from src.utils.general_utils import str2bool, check_keys
+from src.engine.loss_functions import TverskyLoss, SSDLoss, JaccardLoss, FocalLoss, SoftDiceLoss
+from copy import deepcopy
+from src.utils.data_generators import CNN2DDatasetGenerator, FCN2DDatasetGenerator,\
+                                      SSD2DDatasetGenerator, CNN3DDatasetGenerator,\
+                                      FCN3DDatasetGenerator
 
 
 class EngineConfigurations(object):
@@ -32,9 +35,11 @@ class EngineConfigurations(object):
         """
         self.dispatcher = Dispatcher(configs)
         self.data_preprocessing = Preprocessing(configs, self.dispatcher)
-        self.train_data = TrainData(configs, self.data_preprocessing, self.dispatcher)
-        self.val_data = ValidationData(configs, self.data_preprocessing, self.dispatcher)
-        self.test_data = TestData(configs, self.data_preprocessing, self.dispatcher)
+        self.augmentation = Augmentation(configs)
+        self.train_options = TrainingOptions(configs)
+        self.train_data = TrainData(configs, self.data_preprocessing, self.dispatcher, self.augmentation, self.train_options)
+        self.val_data = ValidationData(configs, self.data_preprocessing, self.dispatcher, self.augmentation, self.train_options, self.train_data)
+        self.test_data = TestData(configs, self.data_preprocessing, self.dispatcher, self.augmentation, self.train_options)
         self.learning_rate = LearningRate(configs)
         self.optimizer = Optimizer(configs, self.learning_rate)
         self.monitors = Monitors(configs)
@@ -42,9 +47,7 @@ class EngineConfigurations(object):
         self.saver = Saver(configs)
         self.layers = Layers(configs)
         self.loss_function = LossFunction(configs, self.data_preprocessing)
-        self.train_options = TrainingOptions(configs)
         self.callbacks = Callbacks(self.saver, self.learning_rate, self.train_options)
-        self.augmentation = Augmentation(configs)
 
 
 class Dispatcher(object):
@@ -69,17 +72,10 @@ class Preprocessing(object):
         self.s_image_context = configs['preprocessing']['image_context']
         self.s_normalization_type = configs['preprocessing']['normalization_type']
         self.b_to_categorical = str2bool(configs['preprocessing']['categorical_switch'])
+        self.i_num_categories = int(configs['preprocessing']['categories'])
         self.b_weight_loss = str2bool(configs['preprocessing']['weight_loss_switch'])
-        self.b_reshapeX = str2bool(configs['preprocessing']['reshape_X_switch'])
-        self.t_reshapeX = configs['preprocessing']['reshape_X_dimensions']
-        self.b_permuteX = str2bool(configs['preprocessing']['permute_X_switch'])
-        self.t_permuteX = configs['preprocessing']['permute_X_dimensions']
         self.b_repeatX = str2bool(configs['preprocessing']['repeat_X_switch'])
-        self.i_repeatX = configs['preprocessing']['repeat_X_quantity']
-        self.b_reshapeY = str2bool(configs['preprocessing']['reshape_y_switch'])
-        self.t_reshapeY = configs['preprocessing']['reshape_y_dimensions']
-        self.b_permuteY = str2bool(configs['preprocessing']['permute_y_switch'])
-        self.t_permuteY = configs['preprocessing']['permute_y_dimensions']
+        self.i_repeatX = int(configs['preprocessing']['repeat_X_quantity'])
 
         if dispatcher.type_signal == "Train" or dispatcher.type_signal == "Train from Checkpoint":
             self.b_prepare_train = True
@@ -92,574 +88,546 @@ class Preprocessing(object):
             self.b_prepare_test = True
 
 
+class Augmentation(object):
+    def __init__(self, configs):
+        """
+        Constructor class to prepare the training options for DLAE.
+        :param configs: engine configuration structure
+        """
+        self.b_augmentation = literal_eval(configs['augmentation']['apply_augmentation_switch'])
+        self.b_fw_centering = literal_eval(configs['augmentation']['featurewise_centering_switch'])
+        self.b_sw_centering = literal_eval(configs['augmentation']['samplewise_centering_switch'])
+        self.b_fw_normalization = literal_eval(configs['augmentation']['featurewise_normalization_switch'])
+        self.b_sw_normalization = literal_eval(configs['augmentation']['samplewise_normalization_switch'])
+        self.f_width_shift = float(configs['augmentation']['width_shift'])
+        self.f_height_shift = float(configs['augmentation']['height_shift'])
+        self.i_rotation_range = int(configs['augmentation']['rotation_range'])
+        self.t_brightness_range = literal_eval(configs['augmentation']['brightness_range'])
+        self.f_shear_range = float(configs['augmentation']['shear_range'])
+        self.f_zoom_range = float(configs['augmentation']['zoom_range'])
+        self.f_channel_shift_range = float(configs['augmentation']['channel_shift_range'])
+        self.s_fill_mode = configs['augmentation']['fill_mode']
+        self.f_cval = float(configs['augmentation']['cval'])
+        self.b_horizontal_flip = literal_eval(configs['augmentation']['horizontal_flip_switch'])
+        self.b_vertical_flip = literal_eval(configs['augmentation']['vertical_flip_switch'])
+        self.i_random_seed = int(configs['augmentation']['random_seed'])
+        self.i_rounds = int(configs['augmentation']['rounds'])
+        self.f_zca_epsilon = literal_eval(configs['augmentation']['zca_epsilon'])
+
+
+class TrainingOptions(object):
+    def __init__(self, configs):
+        """
+        Constructor class to prepare the training options for DLAE.
+        :param configs: engine configuration structure
+        """
+        self.i_batchSize = int(configs['training_configurations']['batch_size'])
+        self.i_epochs = int(configs['training_configurations']['epochs'])
+        self.s_hardware = configs['training_configurations']['hardware']
+        self.i_nGpus = int(configs['training_configurations']['number_of_gpus'])
+        self.b_shuffleData = str2bool(configs['training_configurations']['shuffle_data_switch'])
+        self.f_validationSplit = float(configs['training_configurations']['validation_split'])
+        self.b_earlyStop = str2bool(configs['training_configurations']['early_stop_switch'])
+        self.i_earlyStopPatience = int(configs['training_configurations']['early_stop_patience'])
+        self.s_scalingType = configs['bbd_options']['scaling_type']
+        self.l_scales = list(literal_eval(configs['bbd_options']['scales']))
+        self.s_aspectRatiosType = configs['bbd_options']['aspect_ratios_type']
+        self.l_aspectRatios = literal_eval(configs['bbd_options']['aspect_ratios'])
+        self.i_numberOfBBDClasses = int(configs['bbd_options']['number_classes'])
+        self.l_steps = literal_eval(configs['bbd_options']['steps'])
+        self.l_offsets = literal_eval(configs['bbd_options']['offsets'])
+        self.l_variances = literal_eval(configs['bbd_options']['variances'])
+        self.f_confidenceThreshold = float(configs['bbd_options']['confidence_threshold'])
+        self.f_iouThreshold = float(configs['bbd_options']['iou_threshold'])
+        self.f_posIouThreshold = float(configs['bbd_options']['positive_iou_threshold'])
+        self.f_negIouLimit = float(configs['bbd_options']['negative_iou_limit'])
+        self.i_topK = int(configs['bbd_options']['top_k'])
+        self.i_nmsMaximumOutput = int(configs['bbd_options']['nms_maximum_output'])
+        self.s_coordinatesType = configs['bbd_options']['coordinates_type']
+        self.b_twoBoxesForAR1 = str2bool(configs['bbd_options']['two_boxes_for_AR1_switch'])
+        self.b_clipBoxes = str2bool(configs['bbd_options']['clip_boxes_switch'])
+        self.b_normalizeCoordinates = str2bool(configs['bbd_options']['normalize_coordinates_switch'])
+
+
 class TrainData(object):
-    def __init__(self, configs, preprocessing, dispatcher):
+    def __init__(self, configs, preprocessing, dispatcher, augmentation, train_optiions):
         """
         Constructor class to prepare the training data for DLAE.
         :param configs: engine configuration structure
         :param preprocessing: the preprocessing steps
         :param dispatcher: the engine dispatcher
+        :param augmentation: the engine augmentation options
+        :param train_optiions: the engine training options
         """
         self.errors = []
         self.warnings = []
         self.s_trainXPath = configs['paths']['train_X']
         self.s_trainYPath = configs['paths']['train_y']
-        self.trainX = None
-        self.trainY = None
+        self.train_generator = None
+        self.val_generator_reserve = None
 
         if (any(self.s_trainXPath) and any(self.s_trainYPath) is False)\
                 or (any(self.s_trainYPath) and any(self.s_trainXPath) is False):
             self.errors.append('Level2Error:BothTrainImagesandAnnotationPathsNotSpecified')
 
         elif any(self.s_trainXPath) is False and any(self.s_trainYPath) is False:
-            pass
+            preprocessing.b_prepare_train = False
 
         else:
-            try:
-                if dispatcher.model_signal == "BBD":
-                    self.trainX, self.trainY = read_bbd_X_Y(self.s_trainXPath, self.s_trainYPath)
-                else:
-                    self.trainX = read_hdf5(self.s_trainXPath)
-            except ImportError:
-                self.errors.append('Level2Error:CouldNotLoadTrainXFile')
+            proceed = check_keys(self.s_trainXPath, self.s_trainYPath)
+            if proceed is False:
+                self.errors.append('Level2Error:TrainXandTrainYDatasetNamesDontMatch')
 
-            try:
-                if dispatcher.model_signal == "BBD":
-                    pass
-                else:
-                    self.trainY = read_hdf5(self.s_trainYPath)
-            except ImportError:
-                self.errors.append('Level2Error:CouldNotLoadTrainYFile')
+        minimums = [0.]
+        maximums = [0.]
+        if preprocessing.s_normalization_type == 'global_x' or preprocessing.s_normalization_type == 'global_xy':
+            if (any(preprocessing.f_minImageIntensity) is False) \
+                    or (any(preprocessing.f_maxImageIntensity) is False) \
+                    or (any(preprocessing.f_minImageIntensity) is False and any(
+                        preprocessing.f_maxImageIntensity) is False):
+                self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
+            else:
+                mins = preprocessing.f_minImageIntensity.split(',')
+                maxs = preprocessing.f_maxImageIntensity.split(',')
+                minimums = []
+                maximums = []
+                for val in mins:
+                    minimums.append(float(val))
 
-        if self.trainX is not None and self.trainY is not None\
-                and preprocessing.b_prepare_train and dispatcher.model_signal != "BBD":
-            try:
-                if preprocessing.s_image_context == '2D':
-                    if len(self.trainX.shape) == 2:
-                        try:
-                            self.trainX = np.expand_dims(self.trainX, axis=0)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandTrainXDimensions')
+                for val in maxs:
+                    maximums.append(float(val))
 
-                    if len(self.trainX.shape) == 3:
-                        try:
-                            self.trainX = np.expand_dims(self.trainX, axis=3)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandTrainXDimensions')
+        if preprocessing.b_prepare_train:
+            if dispatcher.model_signal == 'CNN':
+                # try:
+                    if preprocessing.s_image_context == '2D':
+                        generator = CNN2DDatasetGenerator(self.s_trainXPath,
+                                                          self.s_trainYPath,
+                                                          rotation_range=augmentation.i_rotation_range,
+                                                          width_shift_range=augmentation.f_width_shift,
+                                                          height_shift_range=augmentation.f_height_shift,
+                                                          shear_range=augmentation.f_shear_range,
+                                                          zoom_range=augmentation.f_zoom_range,
+                                                          flip_horizontal=augmentation.b_horizontal_flip,
+                                                          flip_vertical=augmentation.b_vertical_flip,
+                                                          featurewise_center=augmentation.b_fw_centering,
+                                                          featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                          samplewise_center=augmentation.b_sw_centering,
+                                                          samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                          zca_epsilon=augmentation.f_zca_epsilon,
+                                                          shuffle_data=train_optiions.b_shuffleData,
+                                                          rounds=augmentation.i_rounds,
+                                                          fill_mode=augmentation.s_fill_mode,
+                                                          cval=augmentation.f_cval,
+                                                          interpolation_order=1,
+                                                          seed=augmentation.i_random_seed,
+                                                          batch_size=train_optiions.i_batchSize,
+                                                          validation_split=train_optiions.f_validationSplit,
+                                                          subset='train',
+                                                          normalization=preprocessing.s_normalization_type,
+                                                          min_intensity=minimums,
+                                                          max_intensity=maximums,
+                                                          categorical_labels=preprocessing.b_to_categorical,
+                                                          num_classes=preprocessing.i_num_categories,
+                                                          repeat_chans=preprocessing.b_repeatX,
+                                                          chan_repititions=preprocessing.i_repeatX)
+                    elif preprocessing.s_image_context == '3D':
+                        generator = CNN3DDatasetGenerator(self.s_trainXPath,
+                                                          self.s_trainYPath,
+                                                          rotation_range=augmentation.i_rotation_range,
+                                                          width_shift_range=augmentation.f_width_shift,
+                                                          height_shift_range=augmentation.f_height_shift,
+                                                          shear_range=augmentation.f_shear_range,
+                                                          zoom_range=augmentation.f_zoom_range,
+                                                          flip_horizontal=augmentation.b_horizontal_flip,
+                                                          flip_vertical=augmentation.b_vertical_flip,
+                                                          featurewise_center=augmentation.b_fw_centering,
+                                                          featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                          samplewise_center=augmentation.b_sw_centering,
+                                                          samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                          zca_epsilon=augmentation.f_zca_epsilon,
+                                                          shuffle_data=train_optiions.b_shuffleData,
+                                                          rounds=augmentation.i_rounds,
+                                                          fill_mode=augmentation.s_fill_mode,
+                                                          cval=augmentation.f_cval,
+                                                          interpolation_order=1,
+                                                          seed=augmentation.i_random_seed,
+                                                          batch_size=train_optiions.i_batchSize,
+                                                          validation_split=train_optiions.f_validationSplit,
+                                                          subset='train',
+                                                          normalization=preprocessing.s_normalization_type,
+                                                          min_intensity=minimums,
+                                                          max_intensity=maximums,
+                                                          categorical_labels=preprocessing.b_to_categorical,
+                                                          num_classes=preprocessing.i_num_categories,
+                                                          repeat_chans=preprocessing.b_repeatX,
+                                                          chan_repititions=preprocessing.i_repeatX)
+                    self.train_generator = deepcopy(generator)
+                    if train_optiions.f_validationSplit > 0.:
+                        self.val_generator_reserve = deepcopy(generator)
+                        self.val_generator_reserve.subset = 'validation'
+                # except:
+                #     self.errors.append('Level2Error:CouldNotEstablishCNNTrainGenerator')
+            elif dispatcher.model_signal == 'FCN' or dispatcher.model_signal == 'GAN':
+                # try:
+                    if preprocessing.s_image_context == '2D':
+                        generator = FCN2DDatasetGenerator(self.s_trainXPath,
+                                                          self.s_trainYPath,
+                                                          rotation_range=augmentation.i_rotation_range,
+                                                          width_shift_range=augmentation.f_width_shift,
+                                                          height_shift_range=augmentation.f_height_shift,
+                                                          shear_range=augmentation.f_shear_range,
+                                                          zoom_range=augmentation.f_zoom_range,
+                                                          flip_horizontal=augmentation.b_horizontal_flip,
+                                                          flip_vertical=augmentation.b_vertical_flip,
+                                                          featurewise_center=augmentation.b_fw_centering,
+                                                          featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                          samplewise_center=augmentation.b_sw_centering,
+                                                          samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                          zca_epsilon=augmentation.f_zca_epsilon,
+                                                          shuffle_data=train_optiions.b_shuffleData,
+                                                          rounds=augmentation.i_rounds,
+                                                          fill_mode=augmentation.s_fill_mode,
+                                                          cval=augmentation.f_cval,
+                                                          interpolation_order=1,
+                                                          seed=augmentation.i_random_seed,
+                                                          batch_size=train_optiions.i_batchSize,
+                                                          validation_split=train_optiions.f_validationSplit,
+                                                          subset='train',
+                                                          normalization=preprocessing.s_normalization_type,
+                                                          min_intensity=minimums,
+                                                          max_intensity=maximums,
+                                                          categorical_labels=preprocessing.b_to_categorical,
+                                                          num_classes=preprocessing.i_num_categories,
+                                                          repeat_chans=preprocessing.b_repeatX,
+                                                          chan_repititions=preprocessing.i_repeatX)
+                    elif preprocessing.s_image_context == '3D':
+                        generator = FCN3DDatasetGenerator(self.s_trainXPath,
+                                                          self.s_trainYPath,
+                                                          rotation_range=augmentation.i_rotation_range,
+                                                          width_shift_range=augmentation.f_width_shift,
+                                                          height_shift_range=augmentation.f_height_shift,
+                                                          shear_range=augmentation.f_shear_range,
+                                                          zoom_range=augmentation.f_zoom_range,
+                                                          flip_horizontal=augmentation.b_horizontal_flip,
+                                                          flip_vertical=augmentation.b_vertical_flip,
+                                                          featurewise_center=augmentation.b_fw_centering,
+                                                          featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                          samplewise_center=augmentation.b_sw_centering,
+                                                          samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                          zca_epsilon=augmentation.f_zca_epsilon,
+                                                          shuffle_data=train_optiions.b_shuffleData,
+                                                          rounds=augmentation.i_rounds,
+                                                          fill_mode=augmentation.s_fill_mode,
+                                                          cval=augmentation.f_cval,
+                                                          interpolation_order=1,
+                                                          seed=augmentation.i_random_seed,
+                                                          batch_size=train_optiions.i_batchSize,
+                                                          validation_split=train_optiions.f_validationSplit,
+                                                          subset='train',
+                                                          normalization=preprocessing.s_normalization_type,
+                                                          min_intensity=minimums,
+                                                          max_intensity=maximums,
+                                                          categorical_labels=preprocessing.b_to_categorical,
+                                                          num_classes=preprocessing.i_num_categories,
+                                                          repeat_chans=preprocessing.b_repeatX,
+                                                          chan_repititions=preprocessing.i_repeatX)
+                    self.train_generator = deepcopy(generator)
+                    if train_optiions.f_validationSplit > 0.:
+                        self.val_generator_reserve = deepcopy(generator)
+                        self.val_generator_reserve.subset = 'validation'
+                # except:
+                #     self.errors.append('Level2Error:CouldNotEstablishFCNorGANTrainGenerator')
 
-                    if dispatcher.model_signal == "GAN" or dispatcher.model_signal == "FCN":
-                        if len(self.trainY.shape) == 2:
-                            try:
-                                self.trainY = np.expand_dims(self.trainY, axis=0)
-                            except:
-                                self.errors.append('Level2Error:CouldNotExpandTrainYDimensions')
-
-                        if len(self.trainY.shape) == 3:
-                            try:
-                                self.trainY = np.expand_dims(self.trainY, axis=3)
-                            except:
-                                self.errors.append('Level2Error:CouldNotExpandTrainYDimensions')
-
-                elif preprocessing.s_image_context == '3D':
-                    if len(self.trainX.shape) == 3:
-                        try:
-                            self.trainX = np.expand_dims(self.trainX, axis=0)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandTrainXDimensions')
-
-                    if len(self.trainX.shape) == 4:
-                        try:
-                            self.trainX = np.expand_dims(self.trainX, axis=4)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandTrainXDimensions')
-
-                    if dispatcher.model_signal == "GAN" or dispatcher.model_signal == "FCN":
-                        if len(self.trainY.shape) == 3:
-                            try:
-                                self.trainY = np.expand_dims(self.trainY, axis=0)
-                            except:
-                                self.errors.append('Level2Error:CouldNotExpandTrainYDimensions')
-
-                        if len(self.trainY.shape) == 4:
-                            try:
-                                self.trainY = np.expand_dims(self.trainY, axis=4)
-                            except:
-                                self.errors.append('Level2Error:CouldNotExpandTrainYDimensions')
-
-                if preprocessing.b_permuteX:
-                    try:
-                        if any(preprocessing.t_permuteX) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyTrainXPermutationDimensions')
-
-                        else:
-                            self.trainX = np.transpose(self.trainX, axes=literal_eval(preprocessing.t_permuteX))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedTrainXPermutation')
-
-                if preprocessing.b_reshapeX:
-                    try:
-                        if any(preprocessing.t_reshapeX) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyTrainXReshapeDimensions')
-
-                        else:
-                            self.trainX = np.reshape(self.trainX, newshape=literal_eval(preprocessing.t_reshapeX))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedTrainXReshape')
-
-                if preprocessing.b_permuteY:
-                    try:
-                        if any(preprocessing.t_permuteY) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyTrainYPermutationDimensions')
-
-                        else:
-                            self.trainY = np.transpose(self.trainY, axes=literal_eval(preprocessing.t_permuteY))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedTrainYPermutation')
-
-                if preprocessing.b_reshapeY:
-                    try:
-                        if any(preprocessing.t_reshapeY) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyTrainYReshapeDimensions')
-
-                        else:
-                            self.trainY = np.reshape(self.trainY, newshape=literal_eval(preprocessing.t_reshapeY))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedTrainYReshape')
-
-                if self.trainX.shape[0] != self.trainY.shape[0]:
-                    self.errors.append('Level2Error:NumberofTrainXImagesMustEqualNumberofTrainYAnnotations')
-
-                if preprocessing.s_normalization_type == 'none':
-                    pass
-
-                elif preprocessing.s_normalization_type == 'X from [0, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimum = float(preprocessing.f_minImageIntensity)
-                            maximum = float(preprocessing.f_maxImageIntensity)
-                            self.trainX = (self.trainX - minimum) / (maximum - minimum)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeTrainXData')
-
-                elif preprocessing.s_normalization_type == 'X from [-1, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimum = float(preprocessing.f_minImageIntensity)
-                            maximum = float(preprocessing.f_maxImageIntensity)
-                            self.trainX = 2 * (((self.trainX - minimum) / (maximum - minimum)) - 0.5)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeTrainXData')
-
-                elif preprocessing.s_normalization_type == 'X, Y from [0, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimums = preprocessing.f_minImageIntensity.split(',')
-                            maximums = preprocessing.f_maxImageIntensity.split(',')
-                            self.trainX = (self.trainX - float(minimums[0])) / (float(maximums[0]) - float(minimums[0]))
-                            self.trainY = (self.trainY - float(minimums[1])) / (float(maximums[1]) - float(minimums[1]))
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeTrainXAndTrainYData')
-
-                elif preprocessing.s_normalization_type == 'X, Y from [-1, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimums = preprocessing.f_minImageIntensity.split(',')
-                            maximums = preprocessing.f_maxImageIntensity.split(',')
-                            self.trainX = 2 * (((self.trainX - float(minimums[0])) / (float(maximums[0]) - float(minimums[0]))) - 0.5)
-                            self.trainY = 2 * (((self.trainY - float(minimums[1])) / (float(maximums[1]) - float(minimums[1]))) - 0.5)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeTrainXAndTrainYData')
-
-                if preprocessing.i_repeatX:
-                    try:
-                        self.trainX = np.repeat(self.trainX, repeats= int(preprocessing.i_repeatX),
-                                                axis=np.ndim(self.trainX) - 1)
-                    except:
-                        self.errors.append('Level2Error:CouldNotRepeatTrainXAlongChannels')
-
-            except SyntaxError:
-                self.errors.append('Level2Error:CouldNotPerformPreprocessingonTrainData')
+            elif dispatcher.model_signal == 'BBD':
+                # try:
+                    if preprocessing.s_image_context == '2D':
+                        generator = SSD2DDatasetGenerator(self.s_trainXPath,
+                                                          self.s_trainYPath,
+                                                          shuffle_data=train_optiions.b_shuffleData,
+                                                          rounds=augmentation.i_rounds,
+                                                          seed=augmentation.i_random_seed,
+                                                          batch_size=train_optiions.i_batchSize,
+                                                          validation_split=train_optiions.f_validationSplit,
+                                                          subset='train',
+                                                          normalization=preprocessing.s_normalization_type,
+                                                          min_intensity=minimums,
+                                                          max_intensity=maximums,
+                                                          repeat_chans=preprocessing.b_repeatX,
+                                                          chan_repititions=preprocessing.i_repeatX)
+                        self.train_generator = deepcopy(generator)
+                        if train_optiions.f_validationSplit > 0.:
+                            self.val_generator_reserve = deepcopy(generator)
+                            self.val_generator_reserve.subset = 'validation'
+                # except:
+                #     self.errors.append('Level2Error:CouldNotEstablish2DBBDTrainGenerator')
 
 
 class ValidationData(object):
-    def __init__(self, configs, preprocessing, dispatcher):
+    def __init__(self, configs, preprocessing, dispatcher, augmentation, train_optiions, train_data):
         """
         Constructor class to prepare the validation data for DLAE.
         :param configs: engine configuration structure
         :param preprocessing: the preprocessing steps
         :param dispatcher: the engine dispatcher
+        :param augmentation: the engine augmentation options
+        :param train_optiions: the engine training options
+        :param train_data: the engine training data
         """
         self.errors = []
         self.warnings = []
         self.s_valXPath = configs['paths']['validation_X']
         self.s_valYPath = configs['paths']['validation_y']
-        self.valX = None
-        self.valY = None
+        self.val_generator = None
 
-        if (any(self.s_valXPath) and any(self.s_valYPath) is False)\
-                or (any(self.s_valYPath) and any(self.s_valXPath) is False):
-            self.errors.append('Level2Error:BothValidationImagesandAnnotationPathsNotSpecified')
-
-        elif any(self.s_valXPath) is False and any(self.s_valYPath) is False:
-            pass
-
+        if train_data.val_generator_reserve is not None:
+            self.val_generator = train_data.val_generator_reserve
         else:
-            try:
-                if dispatcher.model_signal == "BBD":
-                    self.valX, self.valY = read_bbd_X_Y(self.s_valXPath, self.s_valYPath)
+            if (any(self.s_valXPath) and any(self.s_valYPath) is False) \
+                    or (any(self.s_valYPath) and any(self.s_valXPath) is False):
+                self.errors.append('Level2Error:BothValidationImagesandAnnotationPathsNotSpecified')
+
+            elif any(self.s_valXPath) is False and any(self.s_valYPath) is False:
+                preprocessing.b_prepare_val = False
+
+            else:
+                proceed = check_keys(self.s_valXPath, self.s_valYPath)
+                if proceed is False:
+                    self.errors.append('Level2Error:ValidationXandValidationYDatasetNamesDontMatch')
+
+            minimums = [0.]
+            maximums = [0.]
+            if preprocessing.s_normalization_type == 'global_x' or preprocessing.s_normalization_type == 'global_xy':
+                if (any(preprocessing.f_minImageIntensity) is False) \
+                        or (any(preprocessing.f_maxImageIntensity) is False) \
+                        or (any(preprocessing.f_minImageIntensity) is False and any(
+                            preprocessing.f_maxImageIntensity) is False):
+                    self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
                 else:
-                    self.valX = read_hdf5(self.s_valXPath)
-            except ImportError:
-                self.errors.append('Level2Error:CouldNotLoadValidationXFile')
+                    mins = preprocessing.f_minImageIntensity.split(',')
+                    maxs = preprocessing.f_maxImageIntensity.split(',')
+                    minimums = []
+                    maximums = []
+                    for val in mins:
+                        minimums.append(float(val))
 
-            try:
-                if dispatcher.model_signal == "BBD":
-                    pass
-                else:
-                    self.valY = read_hdf5(self.s_valYPath)
-            except ImportError:
-                self.errors.append('Level2Error:CouldNotLoadValidationYFile')
+                    for val in maxs:
+                        maximums.append(float(val))
 
-        if self.valX is not None and self.valY is not None\
-                and preprocessing.b_prepare_val and dispatcher.model_signal != "BBD":
-            try:
-                if preprocessing.s_image_context == '2D':
-                    if len(self.valX.shape) == 2:
-                        try:
-                            self.valX = np.expand_dims(self.valX, axis=0)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandValidationXDimensions')
-
-                    if len(self.valX.shape) == 3:
-                        try:
-                            self.valX = np.expand_dims(self.valX, axis=3)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandValidationXDimensions')
-
-                    if dispatcher.model_signal == "GAN" or dispatcher.model_signal == "FCN":
-                        if len(self.valY.shape) == 2:
-                            try:
-                                self.valY = np.expand_dims(self.valY, axis=0)
-                            except:
-                                self.errors.append('Level2Error:CouldNotExpandValidationYDimensions')
-
-                        if len(self.valY.shape) == 3:
-                            try:
-                                self.valY = np.expand_dims(self.valY, axis=3)
-                            except:
-                                self.errors.append('Level2Error:CouldNotExpandValidationYDimensions')
-
-                elif preprocessing.s_image_context == '3D':
-                    if len(self.valX.shape) == 3:
-                        try:
-                            self.valX = np.expand_dims(self.valX, axis=0)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandValidationXDimensions')
-
-                    if len(self.valX.shape) == 4:
-                        try:
-                            self.valX = np.expand_dims(self.valX, axis=4)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandValidationXDimensions')
-
-                    if dispatcher.model_signal == "GAN" or dispatcher.model_signal == "FCN":
-                        if len(self.valY.shape) == 3:
-                            try:
-                                self.valY = np.expand_dims(self.valY, axis=0)
-                            except:
-                                self.errors.append('Level2Error:CouldNotExpandValidationYDimensions')
-
-                        if len(self.valY.shape) == 4:
-                            try:
-                                self.valY = np.expand_dims(self.valY, axis=4)
-                            except:
-                                self.errors.append('Level2Error:CouldNotExpandValidationYDimensions')
-
-                if self.valX.shape[0] != self.valY.shape[0]:
-                    self.errors.append('Level2Error:NumberofValidationXImagesMustEqualNumberofValidationYAnnotations')
-
-                if preprocessing.b_permuteX:
+            if preprocessing.b_prepare_val:
+                if dispatcher.model_signal == 'CNN':
                     try:
-                        if any(preprocessing.t_permuteX) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyValidationXPermutationDimensions')
-
-                        else:
-                            self.valX = np.transpose(self.valX, axes=literal_eval(preprocessing.t_permuteX))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedValidationXPermutation')
-
-                if preprocessing.b_reshapeX:
-                    try:
-                        if any(preprocessing.t_reshapeX) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyValidationXReshapeDimensions')
-
-                        else:
-                            self.valX = np.reshape(self.valX, newshape=literal_eval(preprocessing.t_reshapeX))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedValidationXReshape')
-
-                if preprocessing.b_permuteY:
-                    try:
-                        if any(preprocessing.t_permuteY) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyValidationYPermutationDimensions')
-
-                        else:
-                            self.valY = np.transpose(self.valY, axes=literal_eval(preprocessing.t_permuteY))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedValidationYPermutation')
-
-                if preprocessing.b_reshapeY:
-                    try:
-                        if any(preprocessing.t_reshapeY) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyValidationYReshapeDimensions')
-
-                        else:
-                            self.valY = np.reshape(self.valY, newshape=literal_eval(preprocessing.t_reshapeY))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedValidationYReshape')
-
-                if preprocessing.s_normalization_type == 'none':
-                    pass
-
-                elif preprocessing.s_normalization_type == 'X from [0, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimum = float(preprocessing.f_minImageIntensity)
-                            maximum = float(preprocessing.f_maxImageIntensity)
-                            self.valX = (self.valX - minimum) / (maximum - minimum)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeValidationXData')
-
-                elif preprocessing.s_normalization_type == 'X from [-1, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimum = float(preprocessing.f_minImageIntensity)
-                            maximum = float(preprocessing.f_maxImageIntensity)
-                            self.valX = 2 * (((self.valX - minimum) / (maximum - minimum)) - 0.5)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeValidationXData')
-
-                elif preprocessing.s_normalization_type == 'X, Y from [0, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimums = preprocessing.f_minImageIntensity.split(',')
-                            maximums = preprocessing.f_maxImageIntensity.split(',')
-                            self.valX = (self.valX - float(minimums[0])) / (float(maximums[0]) - float(minimums[0]))
-                            self.valY = (self.valY - float(minimums[1])) / (float(maximums[1]) - float(minimums[1]))
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeValidationXAndValidationYData')
-
-                elif preprocessing.s_normalization_type == 'X, Y from [-1, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimums = preprocessing.f_minImageIntensity.split(',')
-                            maximums = preprocessing.f_maxImageIntensity.split(',')
-                            self.valX = 2 * (((self.valX - float(minimums[0])) / (float(maximums[0]) - float(minimums[0]))) - 0.5)
-                            self.valY = 2 * (((self.valY - float(minimums[1])) / (float(maximums[1]) - float(minimums[1]))) - 0.5)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeValidationXAndValidationYData')
-
-                if preprocessing.i_repeatX:
-                    try:
-                        self.valX = np.repeat(self.valX, repeats=int(preprocessing.i_repeatX),
-                                              axis=np.ndim(self.valX) - 1)
+                        if preprocessing.s_image_context == '2D':
+                            generator = CNN2DDatasetGenerator(self.s_valXPath,
+                                                              self.s_valYPath,
+                                                              featurewise_center=augmentation.b_fw_centering,
+                                                              featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                              samplewise_center=augmentation.b_sw_centering,
+                                                              samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='validation',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums,
+                                                              max_intensity=maximums,
+                                                              categorical_labels=preprocessing.b_to_categorical,
+                                                              num_classes=preprocessing.i_num_categories,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                        elif preprocessing.s_image_context == '3D':
+                            generator = CNN3DDatasetGenerator(self.s_valXPath,
+                                                              self.s_valYPath,
+                                                              featurewise_center=augmentation.b_fw_centering,
+                                                              featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                              samplewise_center=augmentation.b_sw_centering,
+                                                              samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='validation',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums,
+                                                              max_intensity=maximums,
+                                                              categorical_labels=preprocessing.b_to_categorical,
+                                                              num_classes=preprocessing.i_num_categories,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                        self.val_generator = deepcopy(generator)
                     except:
-                        self.errors.append('Level2Error:CouldNotRepeatValidationXAlongChannels')
-
-            except SyntaxError:
-                self.errors.append('Level2Error:CouldNotPerformPreprocessingonValidationData')
+                        self.errors.append('Level2Error:CouldNotEstablishCnnValidationGenerator')
+                elif dispatcher.model_signal == 'FCN' or dispatcher.model_signal == 'GAN':
+                    try:
+                        if preprocessing.s_image_context == '2D':
+                            generator = FCN2DDatasetGenerator(self.s_valXPath,
+                                                              self.s_valYPath,
+                                                              featurewise_center=augmentation.b_fw_centering,
+                                                              featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                              samplewise_center=augmentation.b_sw_centering,
+                                                              samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='validation',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums,
+                                                              max_intensity=maximums,
+                                                              categorical_labels=preprocessing.b_to_categorical,
+                                                              num_classes=preprocessing.i_num_categories,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                        elif preprocessing.s_image_context == '3D':
+                            generator = FCN3DDatasetGenerator(self.s_valXPath,
+                                                              self.s_valYPath,
+                                                              featurewise_center=augmentation.b_fw_centering,
+                                                              featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                              samplewise_center=augmentation.b_sw_centering,
+                                                              samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='validation',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums,
+                                                              max_intensity=maximums,
+                                                              categorical_labels=preprocessing.b_to_categorical,
+                                                              num_classes=preprocessing.i_num_categories,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                        self.val_generator = deepcopy(generator)
+                    except:
+                        self.errors.append('Level2Error:CouldNotEstablishFCNorGANValidationGenerator')
+                elif dispatcher.model_signal == 'BBD':
+                    try:
+                        if preprocessing.s_image_context == '2D':
+                            generator = SSD2DDatasetGenerator(self.s_valXPath,
+                                                              self.s_valYPath,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='validation',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums,
+                                                              max_intensity=maximums,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                            self.val_generator = deepcopy(generator)
+                    except:
+                        self.errors.append('Level2Error:CouldNotEstablish2DBBDValidationGenerator')
 
 
 class TestData(object):
-    def __init__(self, configs, preprocessing, dispatcher):
+    def __init__(self, configs, preprocessing, dispatcher, augmentation, train_optiions):
         """
         Constructor class to prepare the testing data for DLAE.
         :param configs: engine configuration structure
         :param preprocessing: the preprocessing steps
         :param dispatcher: the engine dispatcher
+        :param augmentation: the engine augmentation options
+        :param train_optiions: the engine training options
         """
         self.errors = []
         self.warnings = []
         self.s_testXPath = configs['paths']['test_X']
-        self.testX = None
+        self.test_generator = None
 
         if any(self.s_testXPath) is False:
             pass
         else:
-            try:
-                if dispatcher.model_signal == "BBD":
-                    self.testX = read_hdf5_multientry(self.s_testXPath)
+            minimums = [0.]
+            maximums = [0.]
+            if preprocessing.s_normalization_type == 'global_x' or preprocessing.s_normalization_type == 'global_xy':
+                if (any(preprocessing.f_minImageIntensity) is False) \
+                        or (any(preprocessing.f_maxImageIntensity) is False) \
+                        or (any(preprocessing.f_minImageIntensity) is False and any(
+                            preprocessing.f_maxImageIntensity) is False):
+                    self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
                 else:
-                    self.testX = read_hdf5(self.s_testXPath)
-            except ImportError:
-                self.errors.append('Level2Error:CouldNotLoadTestXFile')
+                    mins = preprocessing.f_minImageIntensity.split(',')
+                    maxs = preprocessing.f_maxImageIntensity.split(',')
+                    minimums = []
+                    maximums = []
+                    for val in mins:
+                        minimums.append(float(val))
 
-        if self.testX is not None and preprocessing.b_prepare_test and dispatcher.model_signal != "BBD":
-            try:
-                if preprocessing.s_image_context == '2D':
-                    if len(self.testX.shape) == 2:
-                        try:
-                            self.testX = np.expand_dims(self.testX, axis=0)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandTestXDimensions')
+                    for val in maxs:
+                        maximums.append(float(val))
 
-                    if len(self.testX.shape) == 3:
-                        try:
-                            self.testX = np.expand_dims(self.testX, axis=3)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandTestXDimensions')
-
-                elif preprocessing.s_image_context == '3D':
-                    if len(self.testX.shape) == 3:
-                        try:
-                            self.testX = np.expand_dims(self.testX, axis=0)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandTestXDimensions')
-
-                    if len(self.testX.shape) == 4:
-                        try:
-                            self.testX = np.expand_dims(self.testX, axis=4)
-                        except:
-                            self.errors.append('Level2Error:CouldNotExpandTestXDimensions')
-
-                if preprocessing.b_permuteX:
+            if preprocessing.b_prepare_test:
+                if dispatcher.model_signal == 'CNN':
                     try:
-                        if any(preprocessing.t_permuteX) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyTestXPermutationDimensions')
-
-                        else:
-                            self.testX = np.transpose(self.testX, axes=literal_eval(preprocessing.t_permuteX))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedTestXPermutation')
-
-                if preprocessing.b_reshapeX:
-                    try:
-                        if any(preprocessing.t_reshapeX) is False:
-                            self.errors.append('Level2Error:NeedToSpecifyTestXReshapeDimensions')
-
-                        else:
-                            self.testX = np.reshape(self.testX, newshape=literal_eval(preprocessing.t_reshapeX))
-
-                    except SyntaxError:
-                        self.errors.append('Level2Error:CouldNotPerformSpecifiedTestXReshape')
-
-                if preprocessing.s_normalization_type == 'none':
-                    pass
-
-                elif preprocessing.s_normalization_type == 'X from [0, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimum = float(preprocessing.f_minImageIntensity)
-                            maximum = float(preprocessing.f_maxImageIntensity)
-                            self.testX = (self.testX - minimum) / (maximum - minimum)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeTestXData')
-
-                elif preprocessing.s_normalization_type == 'X from [-1, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimum = float(preprocessing.f_minImageIntensity)
-                            maximum = float(preprocessing.f_maxImageIntensity)
-                            self.testX = 2 * (((self.testX - minimum) / (maximum - minimum)) - 0.5)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeTestXData')
-
-                elif preprocessing.s_normalization_type == 'X, Y from [0, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimums = preprocessing.f_minImageIntensity.split(',')
-                            maximums = preprocessing.f_maxImageIntensity.split(',')
-                            self.testX = (self.testX - float(minimums[0])) / (float(maximums[0]) - float(minimums[0]))
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeTestXData')
-
-                elif preprocessing.s_normalization_type == 'X, Y from [-1, 1]':
-                    if (any(preprocessing.f_minImageIntensity) is False)\
-                            or (any(preprocessing.f_maxImageIntensity) is False)\
-                            or (any(preprocessing.f_minImageIntensity) is False and any(preprocessing.f_maxImageIntensity) is False):
-                        self.errors.append('Level2Error:SetBothMinandMaxImageIntensityforImageNormalization')
-
-                    else:
-                        try:
-                            minimums = preprocessing.f_minImageIntensity.split(',')
-                            maximums = preprocessing.f_maxImageIntensity.split(',')
-                            self.testX = 2 * (((self.testX - float(minimums[0])) / (float(maximums[0]) - float(minimums[0]))) - 0.5)
-                        except:
-                            self.errors.append('Level2Error:CouldNotNormalizeTestXData')
-
-                if preprocessing.i_repeatX:
-                    try:
-                        self.testX = np.repeat(self.testX, repeats=int(preprocessing.i_repeatX),
-                                               axis=np.ndim(self.testX) - 1)
+                        if preprocessing.s_image_context == '2D':
+                            generator = CNN2DDatasetGenerator(self.s_testXPath,
+                                                              featurewise_center=augmentation.b_fw_centering,
+                                                              featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                              samplewise_center=augmentation.b_sw_centering,
+                                                              samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='test',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums[0],
+                                                              max_intensity=maximums[0],
+                                                              categorical_labels=preprocessing.b_to_categorical,
+                                                              num_classes=preprocessing.i_num_categories,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                        elif preprocessing.s_image_context == '3D':
+                            generator = CNN3DDatasetGenerator(self.s_testXPath,
+                                                              featurewise_center=augmentation.b_fw_centering,
+                                                              featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                              samplewise_center=augmentation.b_sw_centering,
+                                                              samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='test',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums[0],
+                                                              max_intensity=maximums[0],
+                                                              categorical_labels=preprocessing.b_to_categorical,
+                                                              num_classes=preprocessing.i_num_categories,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                        self.test_generator = deepcopy(generator)
                     except:
-                        self.errors.append('Level2Error:CouldNotRepeatTestXAlongChannels')
-
-            except SyntaxError:
-                self.errors.append('Level2Error:CouldNotPerformPreprocessingonTestData')
+                        self.errors.append('Level2Error:CouldNotEstablishCNNTestGenerator')
+                elif dispatcher.model_signal == 'FCN' or dispatcher.model_signal == 'GAN':
+                    try:
+                        if preprocessing.s_image_context == '2D':
+                            generator = FCN2DDatasetGenerator(self.s_testXPath,
+                                                              featurewise_center=augmentation.b_fw_centering,
+                                                              featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                              samplewise_center=augmentation.b_sw_centering,
+                                                              samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='test',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums[0],
+                                                              max_intensity=maximums[0],
+                                                              categorical_labels=preprocessing.b_to_categorical,
+                                                              num_classes=preprocessing.i_num_categories,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                        if preprocessing.s_image_context == '3D':
+                            generator = FCN3DDatasetGenerator(self.s_testXPath,
+                                                              featurewise_center=augmentation.b_fw_centering,
+                                                              featurewise_std_normalization=augmentation.b_fw_normalization,
+                                                              samplewise_center=augmentation.b_sw_centering,
+                                                              samplewise_std_normalization=augmentation.b_sw_normalization,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='test',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums[0],
+                                                              max_intensity=maximums[0],
+                                                              categorical_labels=preprocessing.b_to_categorical,
+                                                              num_classes=preprocessing.i_num_categories,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                        self.test_generator = deepcopy(generator)
+                    except:
+                        self.errors.append('Level2Error:CouldNotEstablishFCNorGANTestGenerator')
+                elif dispatcher.model_signal == 'BBD':
+                    try:
+                        if preprocessing.s_image_context == '2D':
+                            generator = SSD2DDatasetGenerator(self.s_testXPath,
+                                                              batch_size=train_optiions.i_batchSize,
+                                                              subset='test',
+                                                              normalization=preprocessing.s_normalization_type,
+                                                              min_intensity=minimums,
+                                                              max_intensity=maximums,
+                                                              repeat_chans=preprocessing.b_repeatX,
+                                                              chan_repititions=preprocessing.i_repeatX)
+                            self.test_generator = deepcopy(generator)
+                    except:
+                        self.errors.append('Level2Error:CouldNotEstablish2DBBDTestGenerator')
 
 
 class LearningRate(object):
@@ -927,39 +895,17 @@ class LossFunction(object):
             ssd_loss = SSDLoss(neg_pos_ratio=self.f_parameter1, alpha=self.f_parameter2)
             self.loss = ssd_loss.compute_loss
 
+        elif self.s_lossFunction == 'jaccard':
+            jaccard_loss = JaccardLoss(smooth=self.f_parameter1)
+            self.loss = jaccard_loss.compute_loss
 
-class TrainingOptions(object):
-    def __init__(self, configs):
-        """
-        Constructor class to prepare the training options for DLAE.
-        :param configs: engine configuration structure
-        """
-        self.i_batchSize = int(configs['training_configurations']['batch_size'])
-        self.i_epochs = int(configs['training_configurations']['epochs'])
-        self.s_hardware = configs['training_configurations']['hardware']
-        self.i_nGpus = int(configs['training_configurations']['number_of_gpus'])
-        self.b_shuffleData = str2bool(configs['training_configurations']['shuffle_data_switch'])
-        self.f_validationSplit = float(configs['training_configurations']['validation_split'])
-        self.b_earlyStop = str2bool(configs['training_configurations']['early_stop_switch'])
-        self.i_earlyStopPatience = int(configs['training_configurations']['early_stop_patience'])
-        self.s_scalingType = configs['bbd_options']['scaling_type']
-        self.l_scales = list(literal_eval(configs['bbd_options']['scales']))
-        self.s_aspectRatiosType = configs['bbd_options']['aspect_ratios_type']
-        self.l_aspectRatios = literal_eval(configs['bbd_options']['aspect_ratios'])
-        self.i_numberOfBBDClasses = int(configs['bbd_options']['number_classes'])
-        self.l_steps = literal_eval(configs['bbd_options']['steps'])
-        self.l_offsets = literal_eval(configs['bbd_options']['offsets'])
-        self.l_variances = literal_eval(configs['bbd_options']['variances'])
-        self.f_confidenceThreshold = float(configs['bbd_options']['confidence_threshold'])
-        self.f_iouThreshold = float(configs['bbd_options']['iou_threshold'])
-        self.f_posIouThreshold = float(configs['bbd_options']['positive_iou_threshold'])
-        self.f_negIouLimit = float(configs['bbd_options']['negative_iou_limit'])
-        self.i_topK = int(configs['bbd_options']['top_k'])
-        self.i_nmsMaximumOutput = int(configs['bbd_options']['nms_maximum_output'])
-        self.s_coordinatesType = configs['bbd_options']['coordinates_type']
-        self.b_twoBoxesForAR1 = str2bool(configs['bbd_options']['two_boxes_for_AR1_switch'])
-        self.b_clipBoxes = str2bool(configs['bbd_options']['clip_boxes_switch'])
-        self.b_normalizeCoordinates = str2bool(configs['bbd_options']['normalize_coordinates_switch'])
+        elif self.s_lossFunction == 'focal':
+            focal_loss = FocalLoss(alpha=self.f_parameter1, gamma=self.f_parameter2)
+            self.loss = focal_loss.compute_loss
+
+        elif self.s_lossFunction == 'soft_dice':
+            soft_dice_loss = SoftDiceLoss(smooth=self.f_parameter1)
+            self.loss = soft_dice_loss.compute_loss
 
 
 class Callbacks(object):
@@ -994,27 +940,3 @@ class Callbacks(object):
                                                                   cooldown=learning_rate.i_lrDecayOnPlateauPatience,
                                                                   min_lr=1e-9)
             self.callbacks.append(reduce_on_plateau)
-
-
-class Augmentation(object):
-    def __init__(self, configs):
-        """
-        Constructor class to prepare the training options for DLAE.
-        :param configs: engine configuration structure
-        """
-        self.b_augmentation = literal_eval(configs['augmentation']['apply_augmentation_switch'])
-        self.b_fw_centering = literal_eval(configs['augmentation']['featurewise_centering_switch'])
-        self.b_sw_centering = literal_eval(configs['augmentation']['samplewise_centering_switch'])
-        self.b_fw_normalization = literal_eval(configs['augmentation']['featurewise_normalization_switch'])
-        self.b_sw_normalization = literal_eval(configs['augmentation']['samplewise_normalization_switch'])
-        self.f_width_shift = float(configs['augmentation']['width_shift'])
-        self.f_height_shift = float(configs['augmentation']['height_shift'])
-        self.i_rotation_range = int(configs['augmentation']['rotation_range'])
-        self.t_brightness_range = literal_eval(configs['augmentation']['brightness_range'])
-        self.f_shear_range = float(configs['augmentation']['shear_range'])
-        self.f_zoom_range = float(configs['augmentation']['zoom_range'])
-        self.f_channel_shift_range = float(configs['augmentation']['channel_shift_range'])
-        self.s_fill_mode = configs['augmentation']['fill_mode']
-        self.f_cval = float(configs['augmentation']['cval'])
-        self.b_horizontal_flip = literal_eval(configs['augmentation']['horizontal_flip_switch'])
-        self.b_vertical_flip = literal_eval(configs['augmentation']['vertical_flip_switch'])

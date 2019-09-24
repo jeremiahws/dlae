@@ -20,13 +20,8 @@ Constructs the fully convolutional network technique of DLAE.
 import tensorflow as tf
 from src.utils.engine_utils import *
 from src.utils.general_utils import write_hdf5
-from keras.utils import to_categorical
-import numpy as np
 import datetime
 import time
-from keras.preprocessing.image import ImageDataGenerator
-from src.utils.data_utils import ImageDataGenerator3D
-from math import floor
 
 
 class FullyConvolutionalNetwork(object):
@@ -81,153 +76,26 @@ class FullyConvolutionalNetwork(object):
                 self.errors.append('Level3Error:CouldNotCompileFcnGraph')
 
     def train_graph(self):
-        if self.engine_configs.data_preprocessing.b_to_categorical:
-            try:
-                self.engine_configs.train_data.trainY = to_categorical(self.engine_configs.train_data.trainY)
-            except ValueError:
-                self.errors.append('Level3Error:CouldNotConvertTrainYtoCategorical')
-
-            if self.engine_configs.val_data.valY is not None:
-                try:
-                    self.engine_configs.val_data.valY = to_categorical(self.engine_configs.val_data.valY)
-                except ValueError:
-                    self.errors.append('Level3Error:CouldNotConvertValidationYtoCategorical')
-
-        try:
-            if self.engine_configs.val_data.valX is not None:
-                val_data = (self.engine_configs.val_data.valX, self.engine_configs.val_data.valY)
-                val_split = 0.0
-            elif self.engine_configs.val_data.valX is None and self.engine_configs.train_options.f_validationSplit > 0:
-                val_split = self.engine_configs.train_options.f_validationSplit
-                n_tot_imgs = self.engine_configs.train_data.trainX.shape[0]
-                n_val_imgs = floor(val_split * n_tot_imgs)
-                self.engine_configs.val_data.valX = self.engine_configs.train_data.trainX[:n_val_imgs]
-                self.engine_configs.val_data.valY = self.engine_configs.train_data.trainY[:n_val_imgs]
-                self.engine_configs.train_data.trainX = self.engine_configs.train_data.trainX[n_val_imgs:]
-                self.engine_configs.train_data.trainY = self.engine_configs.train_data.trainY[n_val_imgs:]
-                val_data = (self.engine_configs.val_data.valX, self.engine_configs.val_data.valY)
-            else:
-                val_data = None
-                val_split = 0.0
+        if self.engine_configs.val_data.val_generator is not None:
+            val_steps = len(self.engine_configs.val_data.val_generator)
+        else:
             val_steps = None
-        except:
-            self.errors.append('Level3Error:CouldNotDetermineFcnValidationData')
-
-        if self.engine_configs.augmentation.b_augmentation:
-            if self.engine_configs.data_preprocessing.s_image_context == '2D':
-                try:
-                    X_data = ImageDataGenerator(featurewise_center=self.engine_configs.augmentation.b_fw_centering,
-                                                samplewise_center=self.engine_configs.augmentation.b_sw_centering,
-                                                featurewise_std_normalization=self.engine_configs.augmentation.b_fw_normalization,
-                                                samplewise_std_normalization=self.engine_configs.augmentation.b_sw_normalization,
-                                                rotation_range=self.engine_configs.augmentation.i_rotation_range,
-                                                width_shift_range=self.engine_configs.augmentation.f_width_shift,
-                                                height_shift_range=self.engine_configs.augmentation.f_height_shift,
-                                                brightness_range=self.engine_configs.augmentation.t_brightness_range,
-                                                shear_range=self.engine_configs.augmentation.f_shear_range,
-                                                zoom_range=self.engine_configs.augmentation.f_zoom_range,
-                                                channel_shift_range=self.engine_configs.augmentation.f_channel_shift_range,
-                                                fill_mode=self.engine_configs.augmentation.s_fill_mode,
-                                                cval=self.engine_configs.augmentation.f_cval,
-                                                horizontal_flip=self.engine_configs.augmentation.b_horizontal_flip,
-                                                vertical_flip=self.engine_configs.augmentation.b_vertical_flip)
-
-                    y_data = ImageDataGenerator(rotation_range=self.engine_configs.augmentation.i_rotation_range,
-                                                width_shift_range=self.engine_configs.augmentation.f_width_shift,
-                                                height_shift_range=self.engine_configs.augmentation.f_height_shift,
-                                                shear_range=self.engine_configs.augmentation.f_shear_range,
-                                                zoom_range=self.engine_configs.augmentation.f_zoom_range,
-                                                fill_mode=self.engine_configs.augmentation.s_fill_mode,
-                                                horizontal_flip=self.engine_configs.augmentation.b_horizontal_flip,
-                                                vertical_flip=self.engine_configs.augmentation.b_vertical_flip)
-                except:
-                    self.errors.append('Level3Error:CouldNotEstablish2dDataAugmentationGenerators')
-
-            elif self.engine_configs.data_preprocessing.s_image_context == '3D':
-                try:
-                    X_data = ImageDataGenerator3D(featurewise_center=self.engine_configs.augmentation.b_fw_centering,
-                                                  samplewise_center=self.engine_configs.augmentation.b_sw_centering,
-                                                  featurewise_std_normalization=self.engine_configs.augmentation.b_fw_normalization,
-                                                  samplewise_std_normalization=self.engine_configs.augmentation.b_sw_normalization,
-                                                  rotation_range=self.engine_configs.augmentation.i_rotation_range,
-                                                  width_shift_range=self.engine_configs.augmentation.f_width_shift,
-                                                  height_shift_range=self.engine_configs.augmentation.f_height_shift,
-                                                  shear_range=self.engine_configs.augmentation.f_shear_range,
-                                                  zoom_range=self.engine_configs.augmentation.f_zoom_range,
-                                                  channel_shift_range=self.engine_configs.augmentation.f_channel_shift_range,
-                                                  fill_mode=self.engine_configs.augmentation.s_fill_mode,
-                                                  cval=self.engine_configs.augmentation.f_cval,
-                                                  horizontal_flip=self.engine_configs.augmentation.b_horizontal_flip,
-                                                  vertical_flip=self.engine_configs.augmentation.b_vertical_flip)
-
-                    y_data = ImageDataGenerator3D(rotation_range=self.engine_configs.augmentation.i_rotation_range,
-                                                  width_shift_range=self.engine_configs.augmentation.f_width_shift,
-                                                  height_shift_range=self.engine_configs.augmentation.f_height_shift,
-                                                  shear_range=self.engine_configs.augmentation.f_shear_range,
-                                                  zoom_range=self.engine_configs.augmentation.f_zoom_range,
-                                                  fill_mode=self.engine_configs.augmentation.s_fill_mode,
-                                                  horizontal_flip=self.engine_configs.augmentation.b_horizontal_flip,
-                                                  vertical_flip=self.engine_configs.augmentation.b_vertical_flip)
-                except:
-                    self.errors.append('Level3Error:CouldNotEstablish3dDataAugmentationGenerators')
-
-            try:
-                X_data.fit(self.engine_configs.train_data.trainX, rounds=2, seed=1)
-                X_flow = X_data.flow(self.engine_configs.train_data.trainX,
-                                     batch_size=self.engine_configs.train_options.i_batchSize)
-
-                y_data.fit(self.engine_configs.train_data.trainY, rounds=2, seed=1)
-                y_flow = y_data.flow(self.engine_configs.train_data.trainY,
-                                     batch_size=self.engine_configs.train_options.i_batchSize)
-
-                train_generator = zip(X_flow, y_flow)
-
-            except:
-               self.errors.append('Level3Error:CouldNotConstructDataAugmentationGenerator')
 
         with self.graph.as_default():
             if self.engine_configs.train_options.i_nGpus > 1:
-                try:
-                    if self.engine_configs.augmentation.b_augmentation:
-                        self.parallel_model.fit_generator(train_generator,
-                                                          epochs=self.engine_configs.train_options.i_epochs,
-                                                          validation_data=val_data,
-                                                          steps_per_epoch=np.ceil(2 * self.engine_configs.train_data.trainX.shape[0] * (1. - val_split) / self.engine_configs.train_options.i_batchSize),
-                                                          validation_steps=val_steps,
-                                                          shuffle=self.engine_configs.train_options.b_shuffleData,
-                                                          callbacks=self.engine_configs.callbacks.callbacks)
-
-                    else:
-                        self.parallel_model.fit(self.engine_configs.train_data.trainX, self.engine_configs.train_data.trainY,
-                                                batch_size=self.engine_configs.train_options.i_batchSize,
-                                                epochs=self.engine_configs.train_options.i_epochs,
-                                                validation_split=val_split,
-                                                validation_data=val_data,
-                                                shuffle=self.engine_configs.train_options.b_shuffleData,
-                                                callbacks=self.engine_configs.callbacks.callbacks)
-                except:
-                   self.errors.append('Level3Error:CouldNotFitFcnGraphwithMultiGpu')
+                self.parallel_model.fit_generator(generator=self.engine_configs.train_data.train_generator.generate(),
+                                                  steps_per_epoch=len(self.engine_configs.train_data.train_generator),
+                                                  epochs=self.engine_configs.train_options.i_epochs,
+                                                  validation_data=self.engine_configs.val_data.val_generator.generate(),
+                                                  validation_steps=val_steps,
+                                                  callbacks=self.engine_configs.callbacks.callbacks)
             else:
-                try:
-                    if self.engine_configs.augmentation.b_augmentation:
-                        self.model.fit_generator(train_generator,
-                                                 epochs=self.engine_configs.train_options.i_epochs,
-                                                 validation_data=val_data,
-                                                 steps_per_epoch=np.ceil(2 * self.engine_configs.train_data.trainX.shape[0] * (1. - val_split) / self.engine_configs.train_options.i_batchSize),
-                                                 validation_steps=val_steps,
-                                                 shuffle=self.engine_configs.train_options.b_shuffleData,
-                                                 callbacks=self.engine_configs.callbacks.callbacks)
-
-                    else:
-                        self.model.fit(self.engine_configs.train_data.trainX, self.engine_configs.train_data.trainY,
-                                       batch_size=self.engine_configs.train_options.i_batchSize,
-                                       epochs=self.engine_configs.train_options.i_epochs,
-                                       validation_split=val_split,
-                                       validation_data=val_data,
-                                       shuffle=self.engine_configs.train_options.b_shuffleData,
-                                       callbacks=self.engine_configs.callbacks.callbacks)
-                except:
-                    self.errors.append('Level3Error:CouldNotFitFcnGraph')
+                self.model.fit_generator(generator=self.engine_configs.train_data.train_generator.generate(),
+                                         steps_per_epoch=len(self.engine_configs.train_data.train_generator),
+                                         epochs=self.engine_configs.train_options.i_epochs,
+                                         validation_data=self.engine_configs.val_data.val_generator.generate(),
+                                         validation_steps=val_steps,
+                                         callbacks=self.engine_configs.callbacks.callbacks)
 
         if self.engine_configs.saver.b_saveModel:
             try:
@@ -239,15 +107,10 @@ class FullyConvolutionalNetwork(object):
         pass
 
     def predict_on_graph(self):
-        if self.engine_configs.data_preprocessing.b_to_categorical:
-            try:
-                self.engine_configs.test_data.testY = to_categorical(self.engine_configs.test_data.testY)
-            except ValueError:
-                self.errors.append('Level3Error:CouldNotConvertTestYtoCategorical')
-
         try:
             self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath)
-            predictions = self.model.predict(self.engine_configs.test_data.testX)
+            predictions = self.model.predict_generator(self.engine_configs.test_data.test_generator.generate(),
+                                                       steps=len(self.engine_configs.test_data.test_generator))
 
             stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
 

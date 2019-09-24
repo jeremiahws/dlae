@@ -17,7 +17,6 @@ Constructs the generative adversarial network technique of DLAE.
 """
 
 
-from math import floor
 import tensorflow as tf
 from src.utils.engine_utils import *
 import numpy as np
@@ -140,7 +139,7 @@ class GenerativeAdversairalNetwork(object):
     def compile_graph(self):
         if self.engine_configs.loss_function.loss == "pix2pix":
             if self.engine_configs.train_options.i_nGpus > 1:
-                raise NotImplementedError
+                raise NotImplementedError('Multi-GPU GANs currently not supported.')
             else:
                 self.discriminator1.compile(optimizer=self.engine_configs.optimizer.d_optimizer,
                                             loss=keras.losses.mean_squared_error,
@@ -158,7 +157,7 @@ class GenerativeAdversairalNetwork(object):
 
         elif self.engine_configs.loss_function.loss == "cyclegan":
             if self.engine_configs.train_options.i_nGpus > 1:
-                raise NotImplementedError
+                raise NotImplementedError('Multi-GPU GANs currently not supported.')
             else:
                 self.discriminator1.compile(optimizer=self.engine_configs.optimizer.d_optimizer,
                                             loss=keras.losses.mean_squared_error,
@@ -195,31 +194,17 @@ class GenerativeAdversairalNetwork(object):
                                  optimizer=self.engine_configs.optimizer.gan_optimizer)
 
     def train_graph(self):
-        # Check if there is any validation data
-        if self.engine_configs.val_data.valX is not None:
-            # There is some validation data, move on
-            pass
+        train_generator = self.engine_configs.train_data.train_generator.generate()
+        if self.engine_configs.val_data.val_generator is not None:
+            val_generator = self.engine_configs.val_data.val_generator.generate()
         else:
-            if self.engine_configs.train_options.f_validationSplit > 0.0:
-                val_split = self.engine_configs.train_options.f_validationSplit
-                n_tot_imgs = self.engine_configs.train_data.trainX.shape[0]
-                n_val_imgs = floor(val_split * n_tot_imgs)
-                self.engine_configs.val_data.valX = self.engine_configs.train_data.trainX[:n_val_imgs]
-                self.engine_configs.val_data.valY = self.engine_configs.train_data.trainY[:n_val_imgs]
-                self.engine_configs.train_data.trainX = self.engine_configs.train_data.trainX[n_val_imgs:]
-                self.engine_configs.train_data.trainY = self.engine_configs.train_data.trainY[n_val_imgs:]
-            else:
-                # No validation data
-                pass
-
-        # Ignore last training images if rem(#images, batch_size) > 0
-        n_batches = floor(self.engine_configs.train_data.trainX.shape[0] / self.engine_configs.train_options.i_batchSize)
+            val_generator = None
 
         if self.engine_configs.loss_function.loss == "pix2pix":
             with self.graph.as_default():
                 if self.engine_configs.train_options.i_nGpus > 1:
                     # see: https://gist.github.com/joelthchao/ef6caa586b647c3c032a4f84d52e3a11
-                    raise NotImplementedError
+                    raise NotImplementedError('Multi-GPU GANs currently not supported.')
                 else:
                     # configure labels for patchgan discriminator
                     patch_size = self.discriminator1.output_shape
@@ -229,31 +214,23 @@ class GenerativeAdversairalNetwork(object):
                     fake = np.zeros((self.engine_configs.train_options.i_batchSize,) + patch_size)
 
                     for epoch in range(self.engine_configs.train_options.i_epochs):
-                        for index in range(n_batches):
-                            batch_X = self.engine_configs.train_data.trainX[index * self.engine_configs.train_options.i_batchSize:(index + 1) * self.engine_configs.train_options.i_batchSize]
-                            batch_y = self.engine_configs.train_data.trainY[index * self.engine_configs.train_options.i_batchSize:(index + 1) * self.engine_configs.train_options.i_batchSize]
+                        for index in range(len(self.engine_configs.train_data.train_generator)):
+                            batch = next(train_generator)
 
-                            if np.random.random() < 0.5:
-                                for ind in range(batch_X.shape[0]):
-                                    flip_X = np.fliplr(batch_X[ind])
-                                    flip_y = np.fliplr(batch_y[ind])
-                                    batch_X[ind] = flip_X
-                                    batch_y[ind] = flip_y
+                            fake_image = self.generator1.predict(batch[0])
 
-                            fake_image = self.generator1.predict(batch_X)
-
-                            d_loss_real = self.discriminator1.train_on_batch([batch_y, batch_X], valid)
-                            d_loss_fake = self.discriminator1.train_on_batch([fake_image, batch_X], fake)
+                            d_loss_real = self.discriminator1.train_on_batch([batch[1], batch[0]], valid)
+                            d_loss_fake = self.discriminator1.train_on_batch([fake_image, batch[0]], fake)
                             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
-                            g_loss = self.gan.train_on_batch([batch_y, batch_X], [valid, batch_y])
+                            g_loss = self.gan.train_on_batch([batch[1], batch[0]], [valid, batch[1]])
                             print("epoch {}/{}".format(epoch + 1, self.engine_configs.train_options.i_epochs),
-                                  "batch {}/{}".format(index + 1, n_batches),
+                                  "batch {}/{}".format(index + 1, len(self.engine_configs.train_data.train_generator)),
                                   "g_loss:", g_loss[0], "d_loss:", d_loss[0], "d_acc:", 100*d_loss[1])
 
-                        if self.engine_configs.val_data.valX is not None and self.engine_configs.loss_function.image_context == '2D':
-                            ind = np.random.randint(self.engine_configs.val_data.valX.shape[0])
-                            val_img = self.engine_configs.val_data.valX[ind]
+                        if val_generator is not None and self.engine_configs.loss_function.image_context == '2D':
+                            val_batch = next(val_generator)
+                            val_img = val_batch[0][0]
                             val_img = np.expand_dims(val_img, axis=0)
                             preds = self.generator1.predict(val_img, batch_size=1)
 
@@ -267,7 +244,7 @@ class GenerativeAdversairalNetwork(object):
                             else:
                                 preds = np.squeeze(preds)
 
-                            img_pair = np.concatenate([self.engine_configs.val_data.valY[ind], preds], axis=1)
+                            img_pair = np.concatenate([val_batch[1][0], preds], axis=1)
 
                             try:
                                 imageio.imwrite(img_name, (0.5 * img_pair + 0.5)*255.0)
@@ -315,7 +292,7 @@ class GenerativeAdversairalNetwork(object):
             with self.graph.as_default():
                 if self.engine_configs.train_options.i_nGpus > 1:
                     # see: https://gist.github.com/joelthchao/ef6caa586b647c3c032a4f84d52e3a11
-                    raise NotImplementedError
+                    raise NotImplementedError('Multi-GPU GANs currently not supported.')
                 else:
                     # configure labels for patchgan discriminator
                     patch_size = self.discriminator1.output_shape
@@ -325,48 +302,36 @@ class GenerativeAdversairalNetwork(object):
                     fake = np.zeros((self.engine_configs.train_options.i_batchSize,) + patch_size)
 
                     for epoch in range(self.engine_configs.train_options.i_epochs):
-                        inds = np.random.permutation(self.engine_configs.train_data.trainX.shape[0])
-                        self.engine_configs.train_data.trainX = self.engine_configs.train_data.trainX[inds]
-                        self.engine_configs.train_data.trainY = self.engine_configs.train_data.trainY[inds]
-                        for index in range(n_batches):
-                            batch_X = self.engine_configs.train_data.trainX[index * self.engine_configs.train_options.i_batchSize:(index + 1) * self.engine_configs.train_options.i_batchSize]
-                            batch_y = self.engine_configs.train_data.trainY[index * self.engine_configs.train_options.i_batchSize:(index + 1) * self.engine_configs.train_options.i_batchSize]
+                        for index in range(len(self.engine_configs.train_data.train_generator)):
+                            batch = next(train_generator)
 
-                            if np.random.random() < 0.5:
-                                for ind in range(batch_X.shape[0]):
-                                    flip_X = np.fliplr(batch_X[ind])
-                                    flip_y = np.fliplr(batch_y[ind])
-                                    batch_X[ind] = flip_X
-                                    batch_y[ind] = flip_y
+                            Xy = self.generator1.predict(batch[0])
+                            yX = self.generator2.predict(batch[1])
 
-                            Xy = self.generator1.predict(batch_X)
-                            yX = self.generator2.predict(batch_y)
-
-                            dX_loss_real = self.discriminator1.train_on_batch(batch_X, valid)
+                            dX_loss_real = self.discriminator1.train_on_batch(batch[0], valid)
                             dX_loss_fake = self.discriminator1.train_on_batch(yX, fake)
                             dX_loss = 0.5 * np.add(dX_loss_real, dX_loss_fake)
 
-                            dy_loss_real = self.discriminator2.train_on_batch(batch_y, valid)
+                            dy_loss_real = self.discriminator2.train_on_batch(batch[1], valid)
                             dy_loss_fake = self.discriminator2.train_on_batch(Xy, fake)
                             dy_loss = 0.5 * np.add(dy_loss_real, dy_loss_fake)
 
                             d_loss = 0.5 * np.add(dX_loss, dy_loss)
 
-                            g_loss = self.gan.train_on_batch([batch_X, batch_y],
-                                                             [valid, valid, batch_X, batch_y, batch_X, batch_y])
+                            g_loss = self.gan.train_on_batch([batch[0], batch[1]],
+                                                             [valid, valid, batch[0], batch[1], batch[0], batch[1]])
 
                             print("epoch {}/{}".format(epoch + 1, self.engine_configs.train_options.i_epochs),
-                                  "batch {}/{}".format(index + 1, n_batches),
+                                  "batch {}/{}".format(index + 1, len(self.engine_configs.train_data.train_generator)),
                                   "g_loss:", g_loss[0], "g_adv:", np.mean(g_loss[1:3]),
                                   "g_recon:", np.mean(g_loss[3:5]), "g_identity:", np.mean(g_loss[5:6]),
                                   "d_loss:", d_loss[0], "d_acc:", 100 * d_loss[1])
 
-                        if self.engine_configs.val_data.valX is not None\
-                                and self.engine_configs.loss_function.image_context == '2D':
-                            ind = np.random.randint(self.engine_configs.val_data.valX.shape[0])
-                            val_img1 = self.engine_configs.val_data.valX[ind]
+                        if val_generator is not None and self.engine_configs.loss_function.image_context == '2D':
+                            val_batch = next(val_generator)
+                            val_img1 = val_batch[0][0]
                             val_img1 = np.expand_dims(val_img1, axis=0)
-                            val_img2 = self.engine_configs.val_data.valY[ind]
+                            val_img2 = val_batch[1][0]
                             val_img2 = np.expand_dims(val_img2, axis=0)
                             preds1 = self.generator1.predict(val_img1, batch_size=1)
                             preds2 = self.generator2.predict(val_img2, batch_size=1)
@@ -401,8 +366,8 @@ class GenerativeAdversairalNetwork(object):
                             else:
                                 recon2 = np.squeeze(recon2)
 
-                            img_pair1 = np.concatenate([self.engine_configs.val_data.valX[ind], preds1, recon1], axis=1)
-                            img_pair2 = np.concatenate([self.engine_configs.val_data.valY[ind], preds2, recon2], axis=1)
+                            img_pair1 = np.concatenate([val_batch[0][0], preds1, recon1], axis=1)
+                            img_pair2 = np.concatenate([val_batch[1][0], preds2, recon2], axis=1)
                             img_pairs = np.concatenate([img_pair1, img_pair2], axis=0)
 
                             try:
@@ -464,7 +429,8 @@ class GenerativeAdversairalNetwork(object):
     def predict_on_graph(self):
         try:
             self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath)
-            predictions = self.model.predict(self.engine_configs.test_data.testX)
+            predictions = self.model.predict_generator(self.engine_configs.test_data.test_generator.generate(),
+                                                       steps=len(self.engine_configs.test_data.test_generator))
 
             stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
 
