@@ -75,8 +75,10 @@ class ConvolutionalNeuralNetwork(object):
 
     def train_graph(self):
         if self.engine_configs.val_data.val_generator is not None:
+            val_data = self.engine_configs.val_data.val_generator.generate()
             val_steps = len(self.engine_configs.val_data.val_generator)
         else:
+            val_data = None
             val_steps = None
 
         with self.graph.as_default():
@@ -84,14 +86,14 @@ class ConvolutionalNeuralNetwork(object):
                 self.parallel_model.fit_generator(generator=self.engine_configs.train_data.train_generator.generate(),
                                                   steps_per_epoch=len(self.engine_configs.train_data.train_generator),
                                                   epochs=self.engine_configs.train_options.i_epochs,
-                                                  validation_data=self.engine_configs.val_data.val_generator.generate(),
+                                                  validation_data=val_data,
                                                   validation_steps=val_steps,
                                                   callbacks=self.engine_configs.callbacks.callbacks)
             else:
                 self.model.fit_generator(generator=self.engine_configs.train_data.train_generator.generate(),
                                          steps_per_epoch=len(self.engine_configs.train_data.train_generator),
                                          epochs=self.engine_configs.train_options.i_epochs,
-                                         validation_data=self.engine_configs.val_data.val_generator.generate(),
+                                         validation_data=val_data,
                                          validation_steps=val_steps,
                                          callbacks=self.engine_configs.callbacks.callbacks)
 

@@ -158,8 +158,11 @@ class BoundingBoxDetector(object):
 
     def train_graph(self):
         if self.engine_configs.val_data.val_generator is not None:
+            val_data = self.engine_configs.val_data.val_generator.generate(transformations=[],
+                                                                           label_encoder=self.input_encoder)
             val_steps = len(self.engine_configs.val_data.val_generator)
         else:
+            val_data = None
             val_steps = None
 
         if self.engine_configs.augmentation.b_augmentation is True:
@@ -186,8 +189,7 @@ class BoundingBoxDetector(object):
                                                   steps_per_epoch=len(self.engine_configs.train_data.train_generator),
                                                   epochs=self.engine_configs.train_options.i_epochs,
                                                   callbacks=self.engine_configs.callbacks.callbacks,
-                                                  validation_data=self.engine_configs.val_data.val_generator.generate(transformations=[],
-                                                                                                                      label_encoder=self.input_encoder),
+                                                  validation_data=val_data,
                                                   validation_steps=val_steps,
                                                   initial_epoch=0)
             else:
@@ -196,8 +198,7 @@ class BoundingBoxDetector(object):
                                          steps_per_epoch=len(self.engine_configs.train_data.train_generator),
                                          epochs=self.engine_configs.train_options.i_epochs,
                                          callbacks=self.engine_configs.callbacks.callbacks,
-                                         validation_data=self.engine_configs.val_data.val_generator.generate(transformations=[],
-                                                                                                             label_encoder=self.input_encoder),
+                                         validation_data=val_data,
                                          validation_steps=val_steps,
                                          initial_epoch=0)
 
