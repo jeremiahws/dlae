@@ -82,6 +82,7 @@ class CNN2DDatasetGenerator(object):
         self.fill_mode = fill_mode
         self.cval = cval
         self.interpolation_order = interpolation_order
+        self.rounds = rounds
         self.seed = seed
         self.validation_split = validation_split
         self.subset = subset
@@ -97,7 +98,7 @@ class CNN2DDatasetGenerator(object):
         if self.subset == 'train':
             if self.shuffle_data:
                 shuffle(self.keys)
-            self.train_dataset_size = rounds * np.ceil(len(self.keys) * (1 - self.validation_split))
+            self.train_dataset_size = np.floor(len(self.keys) * (1 - self.validation_split))
             self.test_dataset_size = None
             self.train_dataset_indices = np.arange(self.train_dataset_size, dtype=np.int32)
             self.test_dataset_indices = None
@@ -144,7 +145,7 @@ class CNN2DDatasetGenerator(object):
         :return: the expected number of batches that will be produced by this generator.
         """
         if self.subset == 'train':
-            return int(np.ceil(self.train_dataset_size / self.batch_size))
+            return int(np.ceil(self.rounds * self.train_dataset_size / self.batch_size))
         elif self.subset == 'validation':
             if self.val_dataset_size is None:
                 raise ValueError('Zero validation data was reserved. If you want to generate a validation set,'
@@ -565,6 +566,7 @@ class CNN3DDatasetGenerator(object):
         self.fill_mode = fill_mode
         self.cval = cval
         self.interpolation_order = interpolation_order
+        self.rounds = rounds
         self.seed = seed
         self.validation_split = validation_split
         self.subset = subset
@@ -580,7 +582,7 @@ class CNN3DDatasetGenerator(object):
         if self.subset == 'train':
             if self.shuffle_data:
                 shuffle(self.keys)
-            self.train_dataset_size = rounds * np.ceil(len(self.keys) * (1 - self.validation_split))
+            self.train_dataset_size = np.floor(len(self.keys) * (1 - self.validation_split))
             self.test_dataset_size = None
             self.train_dataset_indices = np.arange(self.train_dataset_size, dtype=np.int32)
             self.test_dataset_indices = None
@@ -627,7 +629,7 @@ class CNN3DDatasetGenerator(object):
         :return: the expected number of batches that will be produced by this generator.
         """
         if self.subset == 'train':
-            return int(np.ceil(self.train_dataset_size / self.batch_size))
+            return int(np.ceil(self.rounds * self.train_dataset_size / self.batch_size))
         elif self.subset == 'validation':
             if self.val_dataset_size is None:
                 raise ValueError('Zero validation data was reserved. If you want to generate a validation set,'
@@ -1057,6 +1059,7 @@ class FCN2DDatasetGenerator(object):
         self.fill_mode = fill_mode
         self.cval = cval
         self.interpolation_order = interpolation_order
+        self.rounds = rounds
         self.seed = seed
         self.validation_split = validation_split
         self.subset = subset
@@ -1072,7 +1075,7 @@ class FCN2DDatasetGenerator(object):
         if self.subset == 'train':
             if self.shuffle_data:
                 shuffle(self.keys)
-            self.train_dataset_size = rounds * np.ceil(len(self.keys) * (1 - self.validation_split))
+            self.train_dataset_size = np.floor(len(self.keys) * (1 - self.validation_split))
             self.test_dataset_size = None
             self.train_dataset_indices = np.arange(self.train_dataset_size, dtype=np.int32)
             self.test_dataset_indices = None
@@ -1119,7 +1122,7 @@ class FCN2DDatasetGenerator(object):
         :return: the expected number of batches that will be produced by this generator.
         """
         if self.subset == 'train':
-            return int(np.ceil(self.train_dataset_size / self.batch_size))
+            return int(np.ceil(self.rounds * self.train_dataset_size / self.batch_size))
         elif self.subset == 'validation':
             if self.val_dataset_size is None:
                 raise ValueError('Zero validation data was reserved. If you want to generate a validation set,'
@@ -1568,6 +1571,7 @@ class FCN3DDatasetGenerator(object):
         self.fill_mode = fill_mode
         self.cval = cval
         self.interpolation_order = interpolation_order
+        self.rounds = rounds
         self.seed = seed
         self.validation_split = validation_split
         self.subset = subset
@@ -1583,7 +1587,7 @@ class FCN3DDatasetGenerator(object):
         if self.subset == 'train':
             if self.shuffle_data:
                 shuffle(self.keys)
-            self.train_dataset_size = rounds * np.ceil(len(self.keys) * (1 - self.validation_split))
+            self.train_dataset_size = np.floor(len(self.keys) * (1 - self.validation_split))
             self.test_dataset_size = None
             self.train_dataset_indices = np.arange(self.train_dataset_size, dtype=np.int32)
             self.test_dataset_indices = None
@@ -1630,7 +1634,7 @@ class FCN3DDatasetGenerator(object):
         :return: the expected number of batches that will be produced by this generator.
         """
         if self.subset == 'train':
-            return int(np.ceil(self.train_dataset_size / self.batch_size))
+            return int(np.ceil(self.rounds * self.train_dataset_size / self.batch_size))
         elif self.subset == 'validation':
             if self.val_dataset_size is None:
                 raise ValueError('Zero validation data was reserved. If you want to generate a validation set,'
@@ -2065,6 +2069,7 @@ class SSD2DDatasetGenerator(object):
         self.keys = get_keys(self.imgs_hdf5_path)
         self.keys.sort()
         self.shuffle_data = shuffle_data
+        self.rounds = rounds
         self.seed = seed
         self.validation_split = validation_split
         self.subset = subset
@@ -2078,7 +2083,7 @@ class SSD2DDatasetGenerator(object):
         if self.subset == 'train':
             if self.shuffle_data:
                 shuffle(self.keys)
-            self.train_dataset_size = rounds * np.ceil(len(self.keys) * (1 - self.validation_split))
+            self.train_dataset_size = np.floor(len(self.keys) * (1 - self.validation_split))
             self.test_dataset_size = None
             self.train_dataset_indices = np.arange(self.train_dataset_size, dtype=np.int32)
             self.test_dataset_indices = None
@@ -2125,7 +2130,7 @@ class SSD2DDatasetGenerator(object):
         :return: the expected number of batches that will be produced by this generator.
         """
         if self.subset == 'train':
-            return int(np.ceil(self.train_dataset_size / self.batch_size))
+            return int(np.ceil(self.rounds * self.train_dataset_size / self.batch_size))
         elif self.subset == 'validation':
             if self.val_dataset_size is None:
                 raise ValueError('Zero validation data was reserved. If you want to generate a validation set,'
