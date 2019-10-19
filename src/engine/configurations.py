@@ -142,6 +142,8 @@ class TrainingOptions(object):
         self.f_posIouThreshold = float(configs['bbd_options']['positive_iou_threshold'])
         self.f_negIouLimit = float(configs['bbd_options']['negative_iou_limit'])
         self.i_topK = int(configs['bbd_options']['top_k'])
+        if self.i_topK == 0:
+            self.i_topK = 'all'
         self.i_nmsMaximumOutput = int(configs['bbd_options']['nms_maximum_output'])
         self.s_coordinatesType = configs['bbd_options']['coordinates_type']
         self.b_twoBoxesForAR1 = str2bool(configs['bbd_options']['two_boxes_for_AR1_switch'])
