@@ -29,16 +29,20 @@ from ast import literal_eval
 
 
 def main(FLAGS):
+    #os.environ['CUDA_VISIBLE_DEVICES'] = '6,7'
     # define the experiments
     encoders = FLAGS.encoders.split(',')
     losses = FLAGS.losses.split(',')
     alpha = FLAGS.loss_param1.split(',')
     experiments = [encoders, losses, alpha]
-
-    # switch to activate training session
-    do_train = True
+    print(experiments)
+    for experiment in itertools.product(*experiments):
+        print(experiment)
 
     for experiment in itertools.product(*experiments):
+        # switch to activate training session
+        do_train = True
+
         # load the base configurations
         if experiment[0] == 'VGG16' or experiment[0] == 'VGG19':
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'vgg16_unet.json'))
@@ -158,8 +162,13 @@ def main(FLAGS):
         for layer in decoder: layers.append(layer)
         configs['layers']['serial_layer_list'] = layers
 
-        # ensure xentropy only used once per encoder
-        if experiment[1] == 'sparse_categorical_crossentropy' or experiment[1] == 'categorical_crossentropy':
+        # ensure xentropy/jaccard only used once per encoder
+        if experiment[1] == 'sparse_categorical_crossentropy' or experiment[1] == 'categorical_crossentropy' or experiment[1] == 'jaccard' or experiment[1] == 'focal':
+            if experiment[1] == 'focal':
+                configs['loss_function']['parameter1'] = '0.75'
+                configs['loss_function']['parameter2'] = '2.0'
+            if experiment[1] == 'jaccard':
+                configs['loss_function']['parameter1'] = '100.0'
             if experiment[2] == '0.3':
                 configs['loss_function']['loss'] = experiment[1]
             else:
