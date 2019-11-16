@@ -43,44 +43,50 @@ To test the compilation of an example model, run DLAE in GUI mode and load one o
 
 ## CNN
 
-An HDF5 file with a single data set of a numpy array of size:
+An HDF5 file with a # data sets = # images, and each data set is a numpy array of size:
 
 **2D Images:** `(# images, rows, columns, channels)`
 
 **3D Images:** `(# images, rows, columns, slices, channels)`
 
 
-An HDF5 file with a single data set of a numpy array of size:
+An HDF5 file with a # data sets = # images, and each data set is a numpy array of size:
 
 **Annotations for classification tasks:** `(# images,)`
 
 **Annotations for regression tasks:** `(# images, # coordinates)`
 
+The data sets in the images file should have the exact same names as those in the annotations file.
+
 ## FCN
 
-An HDF5 file with a single data set of a numpy array of size:
+An HDF5 file with a # data sets = # images, and each data set is a numpy array of size:
 
 **2D Images:** `(# images, rows, columns, channels)`
 
 **3D Images:** `(# images, rows, columns, slices, channels)`
 
 
-An HDF5 file with a single data set of a numpy array of size:
+An HDF5 file with a # data sets = # images, and each data set is a numpy array of size:
 
 **2D Annotations:** `(# images, rows, columns, channels)`
 
 **3D Annotations:** `(# images, rows, columns, slices, channels)`
 
+The data sets in the images file should have the exact same names as those in the annotations file.
+
 ## GAN
 
-An HDF5 file with a single data set of a numpy array of size:
+An HDF5 file with a # data sets = # images, and each data set is a numpy array of size:
 
 **2D Images:** `(# images, rows, columns, channels)`
 
 
-An HDF5 file with a single data set of a numpy array of size:
+An HDF5 file with a # data sets = # images, and each data set is a numpy array of size:
 
 **2D Annotations:** `(# images, rows, columns, channels)`
+
+The data sets in the images file should have the exact same names as those in the annotations file.
 
 ## BBD
 

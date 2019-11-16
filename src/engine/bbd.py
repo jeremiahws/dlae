@@ -19,6 +19,8 @@ Constructs the bounding box detector technique of DLAE.
 
 import tensorflow as tf
 from src.utils.engine_utils import *
+from src.engine.loss_functions import SSDLoss
+import h5py
 import datetime
 import time
 from src.utils.general_utils import write_hdf5
@@ -167,17 +169,14 @@ class BoundingBoxDetector(object):
 
         if self.engine_configs.augmentation.b_augmentation is True:
             aug_chain = DataAugmentationConstantInputSize(random_flip=0.5,
-                                                          random_translate=((0.03, 0.5), (0.03, 0.5), 0.5),
-                                                          random_scale=(0.5, 2.0, 0.5),
+                                                          random_translate=((0.03, 0.3), (0.03, 0.3), 0.5),
+                                                          random_scale=(0.9, 3.0, 0.5),
                                                           n_trials_max=self.engine_configs.augmentation.i_rounds,
                                                           clip_boxes=True,
                                                           overlap_criterion='area',
-                                                          bounds_box_filter=(0.3, 1.0),
+                                                          bounds_box_filter=(0.5, 1.0),
                                                           bounds_validator=(0.5, 1.0),
-                                                          n_boxes_min=1,
-                                                          background=(0, 0, 0),
-                                                          data_min=0.0,
-                                                          data_max=1.0)
+                                                          n_boxes_min=1)
             aug_chain = [aug_chain]
         else:
             aug_chain = []
@@ -206,20 +205,25 @@ class BoundingBoxDetector(object):
         pass
 
     def predict_on_graph(self):
-        try:
-            self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath)
-            predictions = self.model.predict_generator(self.engine_configs.test_data.testX.test_generator.generate(),
-                                                       steps=len(self.engine_configs.test_data.testX.test_generator))
-            predictions = decode_detections(predictions,
-                                            confidence_thresh=self.engine_configs.train_options.f_confidenceThreshold,
-                                            iou_threshold=self.engine_configs.train_options.f_iouThreshold,
-                                            top_k=self.engine_configs.train_options.i_topK,
-                                            normalize_coords=self.engine_configs.train_options.b_normalizeCoordinates,
-                                            img_height=self.engine_configs.layers.t_input_shape[0],
-                                            img_width=self.engine_configs.layers.t_input_shape[1])
+        ssd_loss = SSDLoss()
+        compute_loss = ssd_loss.compute_loss
+        self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath, custom_objects={'L2Normalization': L2Normalization,
+                                                                                                         'AnchorBoxes': AnchorBoxes,
+                                                                                                         'compute_loss': compute_loss})
+        predictions = self.model.predict_generator(self.engine_configs.test_data.test_generator.generate(),
+                                                   steps=len(self.engine_configs.test_data.test_generator))
 
-            stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
+        predictions = decode_detections(predictions,
+                                        confidence_thresh=self.engine_configs.train_options.f_confidenceThreshold,
+                                        iou_threshold=self.engine_configs.train_options.f_iouThreshold,
+                                        top_k=self.engine_configs.train_options.i_topK,
+                                        normalize_coords=self.engine_configs.train_options.b_normalizeCoordinates,
+                                        img_height=self.engine_configs.layers.t_input_shape[0],
+                                        img_width=self.engine_configs.layers.t_input_shape[1])
 
-            write_hdf5('bbd_predictions_' + stamp + '.h5', predictions)
-        except:
-            self.errors.append('Level3Error:CouldNotMakePredictionsonBbdGraph')
+        stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
+
+        f = h5py.File('bbd_predictions_' + stamp + '.h5', 'w')
+        for i in range(len(predictions)):
+            f.create_dataset(str(i), data=predictions[i])
+        f.close()
