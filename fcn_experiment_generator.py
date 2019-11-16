@@ -13,9 +13,8 @@
 # limitations under the License.
 """fcn_experiment_generator.py
 
-Example generating deep learning experiments for an image segmentation task.
-This examples produces many trained models for segmenting brain structures
-in T1-weighted pediatric MRI.
+Experiment generator for generating deep learning experiments
+for a multi-class image segmentation task.
 """
 
 
@@ -29,7 +28,9 @@ from ast import literal_eval
 
 
 def main(FLAGS):
-    #os.environ['CUDA_VISIBLE_DEVICES'] = '6,7'
+    # set GPU devices to use
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '6,7'
+
     # define the experiments
     encoders = FLAGS.encoders.split(',')
     losses = FLAGS.losses.split(',')
@@ -44,7 +45,9 @@ def main(FLAGS):
         do_train = True
 
         # load the base configurations
-        if experiment[0] == 'VGG16' or experiment[0] == 'VGG19':
+        if experiment[0] == 'UNet':
+            configs = load_config(os.path.join(FLAGS.base_configs_dir, 'unet2d.json'))
+        elif experiment[0] == 'VGG16' or experiment[0] == 'VGG19':
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'vgg16_unet.json'))
         else:
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'xception_unet.json'))
@@ -106,64 +109,76 @@ def main(FLAGS):
         input = ':'.join(input_parts)
         configs['config_file']['input_shape'] = '({}, {}, {})'.format(FLAGS.height, FLAGS.width, FLAGS.channels)
 
-        encoder = layers[1]
-        decoder = layers[2:]
-        last_conv = decoder[-3]
-        last_conv_parts = last_conv.split(':')
-        last_conv_parts[1] = '{}'.format(FLAGS.classes)
-        last_conv = ':'.join(last_conv_parts)
-        decoder[-3] = last_conv
-        encoder_parts = encoder.split(':')
-        encoder_parts[0] = experiment[0]
-        encoder_parts[3] = '({}, {}, {})'.format(FLAGS.height, FLAGS.width, FLAGS.channels)
-        if FLAGS.use_skip_connections:
-            encoder_parts[-2] = 'True'
+        if experiment[0] == 'UNet':
+            layers[0] = input
+            last_conv = layers[-2]
+            last_conv_parts = last_conv.split(':')
+            last_conv_parts[1] = '{}'.format(FLAGS.classes)
+            last_conv = ':'.join(last_conv_parts)
+            layers[-2] = last_conv
+            configs['layers']['serial_layer_list'] = layers
         else:
-            encoder_parts[-2] = 'False'
-            while 'Outer skip target:concatenate' in decoder:
-                decoder.remove('Outer skip target:concatenate')
-        encoder = ':'.join(encoder_parts)
+            encoder = layers[1]
+            decoder = layers[2:]
+            last_conv = decoder[-3]
+            last_conv_parts = last_conv.split(':')
+            last_conv_parts[1] = '{}'.format(FLAGS.classes)
+            last_conv = ':'.join(last_conv_parts)
+            decoder[-3] = last_conv
+            encoder_parts = encoder.split(':')
+            encoder_parts[0] = experiment[0]
+            encoder_parts[3] = '({}, {}, {})'.format(FLAGS.height, FLAGS.width, FLAGS.channels)
+            if FLAGS.use_skip_connections:
+                encoder_parts[-2] = 'True'
+            else:
+                encoder_parts[-2] = 'False'
+                while 'Outer skip target:concatenate' in decoder:
+                    decoder.remove('Outer skip target:concatenate')
+            encoder = ':'.join(encoder_parts)
 
-        if FLAGS.use_imagenet_weights:
-            encoder_parts[1] = 'True'
-            encoder_parts[2] = 'imagenet'
-            configs['preprocessing']['repeat_X_switch'] = 'True'
-            configs['preprocessing']['repeat_X_quantity'] = '3'
-        else:
-            encoder_parts[1] = 'False'
-            encoder_parts[2] = 'none'
-            configs['preprocessing']['repeat_X_switch'] = 'False'
+            if FLAGS.use_imagenet_weights:
+                encoder_parts[1] = 'True'
+                encoder_parts[2] = 'imagenet'
+                configs['preprocessing']['repeat_X_switch'] = 'True'
+                configs['preprocessing']['repeat_X_quantity'] = '3'
+            else:
+                encoder_parts[1] = 'False'
+                encoder_parts[2] = 'none'
+                configs['preprocessing']['repeat_X_switch'] = 'False'
 
-        # inject some layers to connect the encoder to the decoder
-        # for this experiment not many injectors are needed, but may be for others
-        # they're broken up by the type of encoder
-        if experiment[0] == 'VGG16' or experiment[0] == 'VGG19':
-            pass
-        elif experiment[0] == 'DenseNet121' or experiment[0] == 'DenseNet169' or experiment[0] == 'DenseNet201':
-            pass
-        elif experiment[0] == 'InceptionResNetV2' or experiment[0] == 'InceptionV3':
-            decoder.insert(0, 'Zero padding 2D:((1, 1), (1, 1))')
-        elif experiment[0] == 'MobileNet' or experiment[0] == 'MobileNetV2':
-            pass
-        elif experiment[0] == 'ResNet50' or experiment[0] == 'ResNet101' or experiment[0] == 'ResNet152':
-            pass
-        elif experiment[0] == 'ResNet50V2' or experiment[0] == 'ResNet101V2' or experiment[0] == 'ResNet152V2':
-            pass
-        elif experiment[0] == 'ResNeXt50' or experiment[0] == 'ResNeXt101':
-            pass
-        elif experiment[0] == 'Xception':
-            pass
-        else:
-            print('Invalid encoder type:', experiment[0])
-            do_train = False
+            # inject some layers to connect the encoder to the decoder
+            # for this experiment not many injectors are needed, but may be for others
+            # they're broken up by the type of encoder
+            if experiment[0] == 'VGG16' or experiment[0] == 'VGG19':
+                pass
+            elif experiment[0] == 'DenseNet121' or experiment[0] == 'DenseNet169' or experiment[0] == 'DenseNet201':
+                pass
+            elif experiment[0] == 'InceptionResNetV2' or experiment[0] == 'InceptionV3':
+                decoder.insert(0, 'Zero padding 2D:((1, 1), (1, 1))')
+            elif experiment[0] == 'MobileNet' or experiment[0] == 'MobileNetV2':
+                pass
+            elif experiment[0] == 'ResNet50' or experiment[0] == 'ResNet101' or experiment[0] == 'ResNet152':
+                pass
+            elif experiment[0] == 'ResNet50V2' or experiment[0] == 'ResNet101V2' or experiment[0] == 'ResNet152V2':
+                pass
+            elif experiment[0] == 'ResNeXt50' or experiment[0] == 'ResNeXt101':
+                pass
+            elif experiment[0] == 'Xception':
+                pass
+            else:
+                print('Invalid encoder type:', experiment[0])
+                do_train = False
 
-        layers = []
-        layers.extend([input, encoder])
-        for layer in decoder: layers.append(layer)
-        configs['layers']['serial_layer_list'] = layers
+            layers = []
+            layers.extend([input, encoder])
+            for layer in decoder: layers.append(layer)
+            configs['layers']['serial_layer_list'] = layers
 
-        # ensure xentropy/jaccard only used once per encoder
-        if experiment[1] == 'sparse_categorical_crossentropy' or experiment[1] == 'categorical_crossentropy' or experiment[1] == 'jaccard' or experiment[1] == 'focal':
+        # ensure xentropy/jaccard/focal only used once per encoder
+        if experiment[1] == 'sparse_categorical_crossentropy'\
+                or experiment[1] == 'categorical_crossentropy'\
+                or experiment[1] == 'jaccard'\
+                or experiment[1] == 'focal':
             if experiment[1] == 'focal':
                 configs['loss_function']['parameter1'] = '0.75'
                 configs['loss_function']['parameter2'] = '2.0'
