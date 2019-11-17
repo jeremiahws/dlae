@@ -111,16 +111,17 @@ def main(FLAGS):
 
         if experiment[0] == 'UNet':
             layers[0] = input
-            last_conv = layers[-2]
+            last_conv = layers[-3]
             last_conv_parts = last_conv.split(':')
             last_conv_parts[1] = '{}'.format(FLAGS.classes)
             last_conv = ':'.join(last_conv_parts)
-            layers[-2] = last_conv
+            layers[-3] = last_conv
             if FLAGS.use_skip_connections:
                 pass
             else:
                 while 'Outer skip target:concatenate' in layers:
                     layers.remove('Outer skip target:concatenate')
+            print(layers)
             configs['layers']['serial_layer_list'] = layers
         else:
             encoder = layers[1]
