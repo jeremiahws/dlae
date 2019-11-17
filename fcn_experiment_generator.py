@@ -121,7 +121,6 @@ def main(FLAGS):
             else:
                 while 'Outer skip target:concatenate' in layers:
                     layers.remove('Outer skip target:concatenate')
-            print(layers)
             configs['layers']['serial_layer_list'] = layers
         else:
             encoder = layers[1]
