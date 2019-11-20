@@ -232,7 +232,8 @@ class TrainData(object):
                                                           categorical_labels=preprocessing.b_to_categorical,
                                                           num_classes=preprocessing.i_num_categories,
                                                           repeat_chans=preprocessing.b_repeatX,
-                                                          chan_repititions=preprocessing.i_repeatX)
+                                                          chan_repititions=preprocessing.i_repeatX,
+                                                          apply_aug=augmentation.b_augmentation)
                     elif preprocessing.s_image_context == '3D':
                         generator = CNN3DDatasetGenerator(self.s_trainXPath,
                                                           self.s_trainYPath,
@@ -263,7 +264,8 @@ class TrainData(object):
                                                           categorical_labels=preprocessing.b_to_categorical,
                                                           num_classes=preprocessing.i_num_categories,
                                                           repeat_chans=preprocessing.b_repeatX,
-                                                          chan_repititions=preprocessing.i_repeatX)
+                                                          chan_repititions=preprocessing.i_repeatX,
+                                                          apply_aug=augmentation.b_augmentation)
                     self.train_generator = deepcopy(generator)
                     if train_optiions.f_validationSplit > 0.:
                         self.val_generator_reserve = deepcopy(generator)
@@ -302,7 +304,8 @@ class TrainData(object):
                                                           categorical_labels=preprocessing.b_to_categorical,
                                                           num_classes=preprocessing.i_num_categories,
                                                           repeat_chans=preprocessing.b_repeatX,
-                                                          chan_repititions=preprocessing.i_repeatX)
+                                                          chan_repititions=preprocessing.i_repeatX,
+                                                          apply_aug=augmentation.b_augmentation)
                     elif preprocessing.s_image_context == '3D':
                         generator = FCN3DDatasetGenerator(self.s_trainXPath,
                                                           self.s_trainYPath,
@@ -333,7 +336,8 @@ class TrainData(object):
                                                           categorical_labels=preprocessing.b_to_categorical,
                                                           num_classes=preprocessing.i_num_categories,
                                                           repeat_chans=preprocessing.b_repeatX,
-                                                          chan_repititions=preprocessing.i_repeatX)
+                                                          chan_repititions=preprocessing.i_repeatX,
+                                                          apply_aug=augmentation.b_augmentation)
                     self.train_generator = deepcopy(generator)
                     if train_optiions.f_validationSplit > 0.:
                         self.val_generator_reserve = deepcopy(generator)
