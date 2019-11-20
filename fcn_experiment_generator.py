@@ -47,6 +47,8 @@ def main(FLAGS):
         # load the base configurations
         if experiment[0] == 'UNet':
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'unet2d.json'))
+        if experiment[0] == 'UNet3D':
+            configs = load_config(os.path.join(FLAGS.base_configs_dir, 'unet2d.json'))
         elif experiment[0] == 'VGG16' or experiment[0] == 'VGG19':
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'vgg16_unet.json'))
         else:
@@ -105,11 +107,14 @@ def main(FLAGS):
         layers = configs['layers']['serial_layer_list']
         input = layers[0]
         input_parts = input.split(':')
-        input_parts[-1] = '({}, {}, {})'.format(FLAGS.height, FLAGS.width, FLAGS.channels)
+        if experiment[0] == 'UNet3D':
+            input_parts[-1] = '({}, {}, {}, {})'.format(FLAGS.height, FLAGS.width, FLAGS.slices, FLAGS.channels)
+        else:
+            input_parts[-1] = '({}, {}, {})'.format(FLAGS.height, FLAGS.width, FLAGS.channels)
         input = ':'.join(input_parts)
         configs['config_file']['input_shape'] = '({}, {}, {})'.format(FLAGS.height, FLAGS.width, FLAGS.channels)
 
-        if experiment[0] == 'UNet':
+        if experiment[0] == 'UNet' or experiment[0] == 'UNet3D':
             layers[0] = input
             last_conv = layers[-3]
             last_conv_parts = last_conv.split(':')
@@ -276,6 +281,10 @@ if __name__ == '__main__':
     parser.add_argument('--height', type=int,
                         default=512,
                         help='Height of the image (in pixels).')
+
+    parser.add_argument('--slices', type=int,
+                        default=1,
+                        help='Number of slices (for 3D volume inputs).')
 
     parser.add_argument('--channels', type=int,
                         default=1,
