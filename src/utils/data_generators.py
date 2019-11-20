@@ -58,7 +58,8 @@ class CNN2DDatasetGenerator(object):
                  categorical_labels=False,
                  num_classes=None,
                  repeat_chans=False,
-                 chan_repititions=0):
+                 chan_repititions=0,
+                 apply_aug=False):
         self.imgs_hdf5_path = imgs_hdf5_path
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
@@ -138,6 +139,7 @@ class CNN2DDatasetGenerator(object):
             raise ValueError('Invalid subset specified. Valid values are train, validation, or test.')
         self.repeat_chans = repeat_chans
         self.chan_repititions = chan_repititions
+        self.apply_augmentation = apply_aug
 
     def __len__(self):
         """
@@ -225,7 +227,7 @@ class CNN2DDatasetGenerator(object):
                     if self.samplewise_std_normalization:
                         img /= (np.std(img, keepdims=True) + 1e-6)
 
-                    if self.zca_epsilon is not None:
+                    if self.zca_epsilon is not None and self.apply_augmentation is True:
                         flat_x = np.reshape(
                             img, (img.shape[0], np.prod(img.shape[1:])))
                         sigma = np.dot(flat_x.T, flat_x) / flat_x.shape[0]
@@ -307,7 +309,8 @@ class CNN2DDatasetGenerator(object):
                                                 'brightness': brightness,
                                                 'channel_shift_intensity': channel_shift_intensity}
 
-                    img = apply_transform(img, transform_parameters_img)
+                    if self.apply_augmentation is True:
+                        img = apply_transform(img, transform_parameters_img)
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
@@ -542,7 +545,8 @@ class CNN3DDatasetGenerator(object):
                  categorical_labels=False,
                  num_classes=None,
                  repeat_chans=False,
-                 chan_repititions=0):
+                 chan_repititions=0,
+                 apply_aug=False):
         self.imgs_hdf5_path = imgs_hdf5_path
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
@@ -622,6 +626,7 @@ class CNN3DDatasetGenerator(object):
             raise ValueError('Invalid subset specified. Valid values are train, validation, or test.')
         self.repeat_chans = repeat_chans
         self.chan_repititions = chan_repititions
+        self.apply_augmentation = apply_aug
 
     def __len__(self):
         """
@@ -710,7 +715,7 @@ class CNN3DDatasetGenerator(object):
                     if self.samplewise_std_normalization:
                         img /= (np.std(img, keepdims=True) + 1e-6)
 
-                    if self.zca_epsilon is not None:
+                    if self.zca_epsilon is not None and self.apply_augmentation is True:
                         flat_x = np.reshape(
                             img, (img.shape[0], np.prod(img.shape[1:])))
                         sigma = np.dot(flat_x.T, flat_x) / flat_x.shape[0]
@@ -792,15 +797,14 @@ class CNN3DDatasetGenerator(object):
                                                 'brightness': brightness,
                                                 'channel_shift_intensity': channel_shift_intensity}
 
-                    new_img = []
-                    for i in range(img.shape[2]):
-                        aug = img[:, :, i, :]
-                        if img.shape[3] == 1:
-                            aug = np.expand_dims(aug, axis=-1)
-                        aug = apply_transform(aug, transform_parameters_img)
-                        new_img.append(aug)
-                    img = np.array(new_img)
-                    img = np.transpose(img, (0, 1, 3, 2))
+                    if self.apply_augmentation is True:
+                        new_img = []
+                        for i in range(img.shape[2]):
+                            aug = img[:, :, i, :]
+                            aug = apply_transform(aug, transform_parameters_img)
+                            new_img.append(aug)
+                        img = np.array(new_img)
+                        img = np.transpose(img, (1, 2, 0, 3))
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
@@ -1035,7 +1039,8 @@ class FCN2DDatasetGenerator(object):
                  categorical_labels=False,
                  num_classes=None,
                  repeat_chans=False,
-                 chan_repititions=0):
+                 chan_repititions=0,
+                 apply_aug=False):
         self.imgs_hdf5_path = imgs_hdf5_path
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
@@ -1115,6 +1120,7 @@ class FCN2DDatasetGenerator(object):
             raise ValueError('Invalid subset specified. Valid values are train, validation, or test.')
         self.repeat_chans = repeat_chans
         self.chan_repititions = chan_repititions
+        self.apply_augmentation = apply_aug
 
     def __len__(self):
         """
@@ -1208,7 +1214,7 @@ class FCN2DDatasetGenerator(object):
                     if self.samplewise_std_normalization:
                         img /= (np.std(img, keepdims=True) + 1e-6)
 
-                    if self.zca_epsilon is not None:
+                    if self.zca_epsilon is not None and self.apply_augmentation is True:
                         flat_x = np.reshape(
                             img, (img.shape[0], np.prod(img.shape[1:])))
                         sigma = np.dot(flat_x.T, flat_x) / flat_x.shape[0]
@@ -1301,8 +1307,9 @@ class FCN2DDatasetGenerator(object):
                                                  'cval': self.cval,
                                                  'interpolation_order': self.interpolation_order}
 
-                    img = apply_transform(img, transform_parameters_img)
-                    anno = apply_transform(anno, transform_parameters_anno)
+                    if self.apply_augmentation is True:
+                        img = apply_transform(img, transform_parameters_img)
+                        anno = apply_transform(anno, transform_parameters_anno)
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
@@ -1547,7 +1554,8 @@ class FCN3DDatasetGenerator(object):
                  categorical_labels=False,
                  num_classes=None,
                  repeat_chans=False,
-                 chan_repititions=0):
+                 chan_repititions=0,
+                 apply_aug=False):
         self.imgs_hdf5_path = imgs_hdf5_path
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
@@ -1627,6 +1635,7 @@ class FCN3DDatasetGenerator(object):
             raise ValueError('Invalid subset specified. Valid values are train, validation, or test.')
         self.repeat_chans = repeat_chans
         self.chan_repititions = chan_repititions
+        self.apply_augmentation = apply_aug
 
     def __len__(self):
         """
@@ -1721,7 +1730,7 @@ class FCN3DDatasetGenerator(object):
                     if self.samplewise_std_normalization:
                         img /= (np.std(img, keepdims=True) + 1e-6)
 
-                    if self.zca_epsilon is not None:
+                    if self.zca_epsilon is not None and self.apply_augmentation is True:
                         flat_x = np.reshape(
                             img, (img.shape[0], np.prod(img.shape[1:])))
                         sigma = np.dot(flat_x.T, flat_x) / flat_x.shape[0]
@@ -1814,23 +1823,20 @@ class FCN3DDatasetGenerator(object):
                                                  'cval': self.cval,
                                                  'interpolation_order': self.interpolation_order}
 
-                    new_img = []
-                    new_anno = []
-                    for i in range(img.shape[2]):
-                        aug_img = img[:, :, i, :]
-                        aug_anno = anno[:, :, i, :]
-                        if img.shape[3] == 1:
-                            aug_img = np.expand_dims(aug_img, axis=-1)
-                        if anno.shape[3] == 1:
-                            aug_anno = np.expand_dims(aug_anno, axis=-1)
-                        aug_img = apply_transform(aug_img, transform_parameters_img)
-                        aug_anno = apply_transform(aug_anno, transform_parameters_anno)
-                        new_img.append(aug_img)
-                        new_anno.append(aug_anno)
-                    img = np.array(new_img)
-                    img = np.transpose(img, (0, 1, 3, 2))
-                    anno = np.array(new_anno)
-                    anno = np.transpose(anno, (0, 1, 3, 2))
+                    if self.apply_augmentation is True:
+                        new_img = []
+                        new_anno = []
+                        for i in range(img.shape[2]):
+                            aug_img = img[:, :, i, :]
+                            aug_anno = anno[:, :, i, :]
+                            aug_img = apply_transform(aug_img, transform_parameters_img)
+                            aug_anno = apply_transform(aug_anno, transform_parameters_anno)
+                            new_img.append(aug_img)
+                            new_anno.append(aug_anno)
+                        img = np.array(new_img)
+                        img = np.transpose(img, (1, 2, 0, 3))
+                        anno = np.array(new_anno)
+                        anno = np.transpose(anno, (1, 2, 0, 3))
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
