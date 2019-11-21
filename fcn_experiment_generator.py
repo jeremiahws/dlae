@@ -47,7 +47,7 @@ def main(FLAGS):
         # load the base configurations
         if experiment[0] == 'UNet':
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'unet2d.json'))
-        if experiment[0] == 'UNet3D':
+        elif experiment[0] == 'UNet3D':
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'unet3d.json'))
         elif experiment[0] == 'VGG16' or experiment[0] == 'VGG19':
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'vgg16_unet.json'))
