@@ -64,7 +64,7 @@ class CNN2DDatasetGenerator(object):
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
         self.keys = get_keys(self.imgs_hdf5_path)
-        self.keys.sort()
+        self.keys.sort(key=int)
         self.shuffle_data = shuffle_data
         self.rotation_range = rotation_range
         self.width_shift_range = width_shift_range
@@ -551,7 +551,7 @@ class CNN3DDatasetGenerator(object):
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
         self.keys = get_keys(self.imgs_hdf5_path)
-        self.keys.sort()
+        self.keys.sort(key=int)
         self.shuffle_data = shuffle_data
         self.rotation_range = rotation_range
         self.width_shift_range = width_shift_range
@@ -1045,7 +1045,7 @@ class FCN2DDatasetGenerator(object):
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
         self.keys = get_keys(self.imgs_hdf5_path)
-        self.keys.sort()
+        self.keys.sort(key=int)
         self.shuffle_data = shuffle_data
         self.rotation_range = rotation_range
         self.width_shift_range = width_shift_range
@@ -1560,7 +1560,7 @@ class FCN3DDatasetGenerator(object):
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
         self.keys = get_keys(self.imgs_hdf5_path)
-        self.keys.sort()
+        self.keys.sort(key=int)
         self.shuffle_data = shuffle_data
         self.rotation_range = rotation_range
         self.width_shift_range = width_shift_range
@@ -2073,7 +2073,7 @@ class SSD2DDatasetGenerator(object):
         self.annos_hdf5_path = annos_hdf5_path
         self.batch_size = batch_size
         self.keys = get_keys(self.imgs_hdf5_path)
-        self.keys.sort()
+        self.keys.sort(key=int)
         self.shuffle_data = shuffle_data
         self.rounds = rounds
         self.seed = seed

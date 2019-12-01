@@ -50,6 +50,7 @@ def read_hdf5(file):
 def read_hdf5_multientry(file):
     f = h5py.File(file, 'r')
     keys = list(f.keys())
+    keys.sort(key=int)
     data = []
     for key in keys:
         data.append(f[key].value)
