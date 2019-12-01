@@ -50,44 +50,6 @@ def relative_volume_difference(A, B):
     return rvd
 
 
-def modified_hausdorff_distance(A, B):
-    '''Compute modified Hausdorff distance between two segmentation masks.
-
-    :param A: (numpy array) reference segmentaton mask
-    :param B: (numpy array) predicted segmentaton mask
-    :return: modified Hausdorff distance
-    '''
-
-    shape_A = A.shape
-    shape_B = B.shape
-
-    fwd = 0
-    for i in range(shape_A[0]):
-        min_dist = math.inf
-        for j in range(shape_B[0]):
-            new_dist = np.linalg.norm(A[i]-B[j])
-            if new_dist < min_dist:
-                min_dist = new_dist
-
-        fwd = fwd + min_dist
-    fwd = fwd / shape_A[0]
-
-    rvd = 0
-    for j in range(shape_B[0]):
-        min_dist = math.inf
-        for i in range(shape_A[0]):
-            new_dist = np.linalg.norm(A[i] - B[j])
-            if new_dist < min_dist:
-                min_dist = new_dist
-
-        rvd = rvd + min_dist
-    rvd = rvd / shape_B[0]
-
-    mhd = np.max([fwd, rvd])
-
-    return mhd
-
-
 def main(FLAGS):
     # set GPU device to use
     # os.environ['CUDA_VISIBLE_DEVICES'] = '6'
@@ -214,14 +176,13 @@ def main(FLAGS):
                             for error in engine.errors:
                                 print(error)
 
-                pred_file = glob(os.path.join(FLAGS.predictions_dir, '*.h5'))[0]
+                pred_file = glob(os.path.join(FLAGS.predictions_temp_dir, '*.h5'))[0]
                 pt_name = image_files[i].split('.')[0]
                 new_name_raw = pt_name + '_{}_{}_{}_{}_raw.h5'.format(experiment[0],
                                                                       experiment[1],
                                                                       experiment[2],
                                                                       1. - literal_eval(experiment[2]))
-                new_path = os.path.join(os.path.split(pred_file)[0], 'predictions', 'prostate_mri_segmentation')
-                new_file_raw = os.path.join(new_path, new_name_raw)
+                new_file_raw = os.path.join(FLAGS.predictions_final_dir, new_name_raw)
                 os.rename(pred_file, new_file_raw)
 
                 preds = read_hdf5(new_file_raw)
@@ -331,8 +292,12 @@ if __name__ == '__main__':
                         default=r'C:\Users\JSanders1\Desktop\Github\dlae\datasets\brachy_mri_annos',
                         help='Path to directory storing testing annotations for computing performance metrics.')
 
-    parser.add_argument('--predictions_dir', type=str,
+    parser.add_argument('--predictions_temp_dir', type=str,
                         default=r'C:\Users\JSanders1\Desktop\Github\dlae',
+                        help='Path to directory storing model predictions. By default, top level directory of DLAE.')
+
+    parser.add_argument('--predictions_final_dir', type=str,
+                        default=r'C:\Users\JSanders1\Desktop\Github\dlae\predictions\prostate_mri_segmentation',
                         help='Path to directory storing model predictions. By default, top level directory of DLAE.')
 
     parser.add_argument('--ckpt_dir', type=str,
