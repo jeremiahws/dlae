@@ -27,10 +27,10 @@ import os
 from ast import literal_eval
 import numpy as np
 from glob import glob
-import math
 from medpy import metric as mpm
 from sklearn import metrics as skm
 import pandas as pd
+from math import sqrt
 
 
 def relative_volume_difference(A, B):
@@ -43,16 +43,92 @@ def relative_volume_difference(A, B):
     :return: relative volume difference
     '''
 
-    volume_A = np.sum(A)
-    volume_B = np.sum(B)
+    volume_A = int(np.sum(A))
+    volume_B = int(np.sum(B))
     rvd = (volume_A - volume_B) / volume_A
 
     return rvd
 
 
+def jaccard_index(A, B):
+    '''Compute Jaccard index (IoU) between two segmentation masks.
+
+    :param A: (numpy array) reference segmentaton mask
+    :param B: (numpy array) predicted segmentaton mask
+    :return: Jaccard index
+    '''
+
+    both = np.logical_and(A, B)
+    either = np.logical_or(A, B)
+    ji = int(np.sum(both)) / int(np.sum(either))
+
+    return ji
+
+
+def dice_similarity_coefficient(A, B):
+    '''Compute Dice similarity coefficient between two segmentation masks.
+
+    :param A: (numpy array) reference segmentaton mask
+    :param B: (numpy array) predicted segmentaton mask
+    :return: Dice similarity coefficient
+    '''
+
+    both = np.logical_and(A, B)
+    dsc = 2 * int(np.sum(both)) / (int(np.sum(A)) + int(np.sum(B)))
+
+    return dsc
+
+
+def precision(A, B):
+    '''Compute precision between two segmentation masks.
+
+    :param A: (numpy array) reference segmentaton mask
+    :param B: (numpy array) predicted segmentaton mask
+    :return: precision
+    '''
+
+    tp = int(np.sum(np.logical_and(A, B)))
+    fp = int(np.sum(np.logical_and(B, np.logical_not(A))))
+    p = tp / (tp + fp)
+
+    return p
+
+
+def recall(A, B):
+    '''Compute recall between two segmentation masks.
+
+    :param A: (numpy array) reference segmentaton mask
+    :param B: (numpy array) predicted segmentaton mask
+    :return: recall
+    '''
+
+    tp = int(np.sum(np.logical_and(A, B)))
+    fn = int(np.sum(np.logical_and(A, np.logical_not(B))))
+    r = tp / (tp + fn)
+
+    return r
+
+
+def matthews_correlation_coefficient(A, B):
+    '''Compute Matthews correlation coefficient between two segmentation masks.
+
+    :param A: (numpy array) reference segmentaton mask
+    :param B: (numpy array) predicted segmentaton mask
+    :return: Matthews correlation coefficient
+    '''
+
+    tp = int(np.sum(np.logical_and(A, B)))
+    fp = int(np.sum(np.logical_and(B, np.logical_not(A))))
+    tn = int(np.sum(np.logical_and(np.logical_not(A), np.logical_not(B))))
+    fn = int(np.sum(np.logical_and(A, np.logical_not(B))))
+    mcc = (tp * tn - fp * fn) / (sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)))
+
+    return mcc
+
+
 def main(FLAGS):
     # set GPU device to use
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
     # define the experiments
     encoders = FLAGS.encoders.split(',')
@@ -61,9 +137,11 @@ def main(FLAGS):
     experiments = [encoders, losses, alpha]
     print(experiments)
 
-    # define data path
+    # get data files and sort them
     image_files = os.listdir(FLAGS.test_X_dir)
     anno_files = os.listdir(FLAGS.test_y_dir)
+    image_files.sort()
+    anno_files.sort()
 
     for experiment in itertools.product(*experiments):
         # switch to activate training session
@@ -192,7 +270,6 @@ def main(FLAGS):
                 ref = np.squeeze(np.asarray(ref))
 
                 overall_accuracy[i] = skm.accuracy_score(ref.flatten(), preds.flatten())
-                # print('acc:', skm.accuracy_score(ref.flatten(), preds.flatten()))
                 for j in range(FLAGS.classes):
                     organ_pred = (preds == j).astype(np.int64)
                     organ_ref = (ref == j).astype(np.int64)
@@ -206,22 +283,14 @@ def main(FLAGS):
                         metrics[i, j, 6] = np.inf
                         metrics[i, j, 7] = np.inf
                     else:
-                        metrics[i, j, 0] = skm.jaccard_score(organ_ref.flatten(), organ_pred.flatten(), average='binary')
-                        metrics[i, j, 1] = skm.f1_score(organ_ref.flatten(), organ_pred.flatten(), average='binary')
+                        metrics[i, j, 0] = jaccard_index(organ_ref, organ_pred)
+                        metrics[i, j, 1] = dice_similarity_coefficient(organ_ref, organ_pred)
                         metrics[i, j, 2] = relative_volume_difference(organ_ref, organ_pred)
-                        metrics[i, j, 3] = skm.precision_score(organ_ref.flatten(), organ_pred.flatten())
-                        metrics[i, j, 4] = skm.recall_score(organ_ref.flatten(), organ_pred.flatten())
-                        metrics[i, j, 5] = skm.matthews_corrcoef(organ_ref.flatten(), organ_pred.flatten())
+                        metrics[i, j, 3] = precision(organ_ref, organ_pred)
+                        metrics[i, j, 4] = recall(organ_ref, organ_pred)
+                        metrics[i, j, 5] = matthews_correlation_coefficient(organ_ref, organ_pred)
                         metrics[i, j, 6] = mpm.hd95(organ_pred, organ_ref)
                         metrics[i, j, 7] = mpm.assd(organ_pred, organ_ref)
-                        # print('ji:',skm.jaccard_score(organ_ref.flatten(), organ_pred.flatten(), average='binary'))
-                        # print('dsc:',skm.f1_score(organ_ref.flatten(), organ_pred.flatten(), average='binary'))
-                        # print('rvd:',relative_volume_difference(organ_ref, organ_pred))
-                        # print('p:',skm.precision_score(organ_ref.flatten(), organ_pred.flatten()))
-                        # print('r:',skm.recall_score(organ_ref.flatten(), organ_pred.flatten()))
-                        # print('mcc:',skm.matthews_corrcoef(organ_ref.flatten(), organ_pred.flatten()))
-                        # print('hd95:',mpm.hd95(organ_pred, organ_ref))
-                        # print('assd:',mpm.assd(organ_pred, organ_ref))
                 print(overall_accuracy[i])
                 print(metrics[i])
 
