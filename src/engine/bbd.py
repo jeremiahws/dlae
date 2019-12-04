@@ -205,25 +205,31 @@ class BoundingBoxDetector(object):
         pass
 
     def predict_on_graph(self):
-        ssd_loss = SSDLoss()
-        compute_loss = ssd_loss.compute_loss
-        self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath, custom_objects={'L2Normalization': L2Normalization,
-                                                                                                         'AnchorBoxes': AnchorBoxes,
-                                                                                                         'compute_loss': compute_loss})
-        predictions = self.model.predict_generator(self.engine_configs.test_data.test_generator.generate(),
-                                                   steps=len(self.engine_configs.test_data.test_generator))
+        try:
+            ssd_loss = SSDLoss()
+            compute_loss = ssd_loss.compute_loss
+            self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath, custom_objects={'L2Normalization': L2Normalization,
+                                                                                                             'AnchorBoxes': AnchorBoxes,
+                                                                                                             'compute_loss': compute_loss})
+            predictions = self.model.predict_generator(self.engine_configs.test_data.test_generator.generate(),
+                                                       steps=len(self.engine_configs.test_data.test_generator))
 
-        predictions = decode_detections(predictions,
-                                        confidence_thresh=self.engine_configs.train_options.f_confidenceThreshold,
-                                        iou_threshold=self.engine_configs.train_options.f_iouThreshold,
-                                        top_k=self.engine_configs.train_options.i_topK,
-                                        normalize_coords=self.engine_configs.train_options.b_normalizeCoordinates,
-                                        img_height=self.engine_configs.layers.t_input_shape[0],
-                                        img_width=self.engine_configs.layers.t_input_shape[1])
+            predictions = decode_detections(predictions,
+                                            confidence_thresh=self.engine_configs.train_options.f_confidenceThreshold,
+                                            iou_threshold=self.engine_configs.train_options.f_iouThreshold,
+                                            top_k=self.engine_configs.train_options.i_topK,
+                                            normalize_coords=self.engine_configs.train_options.b_normalizeCoordinates,
+                                            img_height=self.engine_configs.layers.t_input_shape[0],
+                                            img_width=self.engine_configs.layers.t_input_shape[1])
 
-        stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
+            stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
 
-        f = h5py.File('bbd_predictions_' + stamp + '.h5', 'w')
-        for i in range(len(predictions)):
-            f.create_dataset(str(i), data=predictions[i])
-        f.close()
+            f = h5py.File('bbd_predictions_' + stamp + '.h5', 'w')
+            for i in range(len(predictions)):
+                f.create_dataset(str(i), data=predictions[i])
+            f.close()
+
+            del self.model
+            K.clear_session()
+        except:
+            self.errors.append('Level3Error:CouldNotMakePredictionsonBbdGraph')

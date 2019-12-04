@@ -115,5 +115,8 @@ class ConvolutionalNeuralNetwork(object):
             stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
 
             write_hdf5('cnn_predictions_' + stamp + '.h5', predictions)
+
+            del self.model
+            K.clear_session()
         except:
             self.errors.append('Level3Error:CouldNotMakePredictionsonCnnGraph')
