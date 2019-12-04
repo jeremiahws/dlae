@@ -31,6 +31,7 @@ from medpy import metric as mpm
 from sklearn import metrics as skm
 import pandas as pd
 from math import sqrt
+import keras.backend.tensorflow_backend as K
 
 
 def relative_volume_difference(A, B):
@@ -210,6 +211,7 @@ def main(FLAGS):
         writer = pd.ExcelWriter(excel_name)
 
         for i in range(len(image_files)):
+            K.clear_session()
             # define path to the test data
             configs['paths']['test_X'] = os.path.join(FLAGS.test_X_dir, image_files[i])
 
@@ -268,6 +270,9 @@ def main(FLAGS):
 
                 ref = read_hdf5_multientry(os.path.join(FLAGS.test_y_dir, anno_files[i]))
                 ref = np.squeeze(np.asarray(ref))
+
+                # check if the images and annotations are the correct files
+                print(image_files[i], anno_files[i])
 
                 overall_accuracy[i] = skm.accuracy_score(ref.flatten(), preds.flatten())
                 for j in range(FLAGS.classes):
