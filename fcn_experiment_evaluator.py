@@ -32,6 +32,7 @@ from sklearn import metrics as skm
 import pandas as pd
 from math import sqrt
 import keras.backend.tensorflow_backend as K
+from copy import deepcopy
 
 
 def relative_volume_difference(A, B):
@@ -130,9 +131,9 @@ def matthews_correlation_coefficient(A, B):
 class SlidingWindow(object):
     def __init__(self, I, stride, chip_size):
         self.img_shape = I.shape
-        n_row_windows = np.ceil((self.img_shape[0] + stride[0]) / stride[0]).astype(int)
-        n_col_windows = np.ceil((self.img_shape[1] + stride[1]) / stride[1]).astype(int)
-        n_slice_windows = np.ceil((self.img_shape[2] + stride[2]) / stride[2]).astype(int)
+        n_row_windows = np.ceil((self.img_shape[0] - chip_size[0] + stride[0]) / stride[0]).astype(int)
+        n_col_windows = np.ceil((self.img_shape[1] - chip_size[1] + stride[1]) / stride[1]).astype(int)
+        n_slice_windows = np.ceil((self.img_shape[2] - chip_size[2] + stride[2]) / stride[2]).astype(int)
 
         self.windows = []
         self.window_corner_coords = []
@@ -188,14 +189,11 @@ class SlidingWindow(object):
     def stitch_patches(patches, patch_coords, patch_size, img_size, channels):
         new_img = np.zeros([img_size[0], img_size[1], img_size[2], channels], dtype='float32')
 
-        print(patches.shape)
-        print(new_img.shape)
-        for i, patch in enumerate(patches):
-            print(patch.shape)
+        for i in range(patches.shape[0]):
             coords = patch_coords[i]
             new_img[coords[0]:coords[0] + patch_size[0],
                     coords[1]:coords[1] + patch_size[1],
-                    coords[2]:coords[2] + patch_size[2], :] = patch
+                    coords[2]:coords[2] + patch_size[2], :] = patches[i]
 
         return new_img
 
@@ -355,6 +353,7 @@ def main(FLAGS):
                                               [128, 128, 48],
                                               sw.img_shape,
                                               FLAGS.classes)
+                    write_hdf5('test_patches.h5',preds)
                     preds = np.argmax(preds, axis=-1)
                 else:
                     preds = np.argmax(preds, axis=-1)
