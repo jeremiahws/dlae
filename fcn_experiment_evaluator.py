@@ -129,28 +129,26 @@ def matthews_correlation_coefficient(A, B):
 
 class SlidingWindow(object):
     def __init__(self, I, stride, chip_size):
-        img_shape = I.shape
-        n_row_windows = np.ceil((img_shape[0] + stride[0]) / stride[0]).astype(int)
-        n_col_windows = np.ceil((img_shape[1] + stride[1]) / stride[1]).astype(int)
-        n_slice_windows = np.ceil((img_shape[2] + stride[2]) / stride[2]).astype(int)
+        self.img_shape = I.shape
+        n_row_windows = np.ceil((self.img_shape[0] + stride[0]) / stride[0]).astype(int)
+        n_col_windows = np.ceil((self.img_shape[1] + stride[1]) / stride[1]).astype(int)
+        n_slice_windows = np.ceil((self.img_shape[2] + stride[2]) / stride[2]).astype(int)
         n_windows = n_row_windows * n_col_windows * n_slice_windows
 
-        self.windows = np.zeros([n_windows, chip_size[0], chip_size[1], chip_size[2]], dtype='float32')
-        self.window_masks = np.zeros([n_windows, chip_size[0], chip_size[1], chip_size[2]], dtype='float32')
-        self.window_corner_coords = np.empty([n_windows, 3], dtype='float32')
-        self.img_shape = I.shape
+        self.windows = []
+        self.window_corner_coords = []
 
         count = 0
         for swindow in range(n_slice_windows):
             if swindow == 0:
                 swindow_start = swindow
-                swindow_end = chip_size
+                swindow_end = chip_size[2]
             else:
                 swindow_start = swindow_start + stride[2]
                 swindow_end = swindow_start + chip_size[2]
 
-            if swindow_end > img_shape[2] - 1:
-                swindow_start = img_shape[2] - chip_size[2]
+            if swindow_end > self.img_shape[2] - 1:
+                swindow_start = self.img_shape[2] - chip_size[2]
                 swindow_end = None
 
             for cwindow in range(n_col_windows):
@@ -161,8 +159,8 @@ class SlidingWindow(object):
                     cwindow_start = cwindow_start + stride[1]
                     cwindow_end = cwindow_start + chip_size[1]
 
-                if cwindow_end > img_shape[1] - 1:
-                    cwindow_start = img_shape[1] - chip_size[1]
+                if cwindow_end > self.img_shape[1] - 1:
+                    cwindow_start = self.img_shape[1] - chip_size[1]
                     cwindow_end = None
 
                 for rwindow in range(n_row_windows):
@@ -173,22 +171,28 @@ class SlidingWindow(object):
                         rwindow_start = rwindow_start + stride[0]
                         rwindow_end = rwindow_start + chip_size[0]
 
-                    if rwindow_end > img_shape[0] - 1:
-                        rwindow_start = img_shape[0] - chip_size[0]
+                    if rwindow_end > self.img_shape[0] - 1:
+                        rwindow_start = self.img_shape[0] - chip_size[0]
                         rwindow_end = None
 
-                    self.windows[count, :, :, :] = I[rwindow_start:rwindow_end,
-                                                     cwindow_start:cwindow_end,
-                                                     swindow_start:swindow_end]
-                    self.window_corner_coords[count, :] = [rwindow_start, cwindow_start, swindow_start]
+                    self.windows.append(I[rwindow_start:rwindow_end,
+                                          cwindow_start:cwindow_end,
+                                          swindow_start:swindow_end])
+                    self.window_corner_coords.append([rwindow_start, cwindow_start, swindow_start])
 
                     count += 1
+
+        self.windows = np.asarray(self.windows)
+        self.window_corner_coords = np.asarray(self.window_corner_coords)
 
     @staticmethod
     def stitch_patches(patches, patch_coords, patch_size, img_size, channels):
         new_img = np.zeros([img_size[0], img_size[1], img_size[2], channels], dtype='float32')
 
+        print(patches.shape)
+        print(new_img.shape)
         for i, patch in enumerate(patches):
+            print(patch.shape)
             coords = patch_coords[i]
             new_img[coords[0]:coords[0] + patch_size[0],
                     coords[1]:coords[1] + patch_size[1],
@@ -343,6 +347,7 @@ def main(FLAGS):
                 if experiment[0] == 'UNet3D':
                     # stich the image back together first
                     sw = SlidingWindow(ref, [96, 96, 40], [128, 128, 48])
+                    print(sw.img_shape)
                     preds = sw.stitch_patches(preds,
                                               sw.window_corner_coords,
                                               [128, 128, 48],
