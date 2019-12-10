@@ -133,7 +133,6 @@ class SlidingWindow(object):
         n_row_windows = np.ceil((self.img_shape[0] + stride[0]) / stride[0]).astype(int)
         n_col_windows = np.ceil((self.img_shape[1] + stride[1]) / stride[1]).astype(int)
         n_slice_windows = np.ceil((self.img_shape[2] + stride[2]) / stride[2]).astype(int)
-        n_windows = n_row_windows * n_col_windows * n_slice_windows
 
         self.windows = []
         self.window_corner_coords = []
@@ -330,6 +329,9 @@ def main(FLAGS):
                             for error in engine.errors:
                                 print(error)
 
+                # check if the images and annotations are the correct files
+                print(image_files[i], anno_files[i])
+
                 pred_file = glob(os.path.join(FLAGS.predictions_temp_dir, '*.h5'))[0]
                 pt_name = image_files[i].split('.')[0]
                 new_name_raw = pt_name + '_{}_{}_{}_{}_raw.h5'.format(experiment[0],
@@ -343,11 +345,11 @@ def main(FLAGS):
                 ref = np.squeeze(np.asarray(ref))
 
                 preds = read_hdf5(new_file_raw)
-
                 if experiment[0] == 'UNet3D':
+                    ref = np.transpose(ref, (1, 2, 0))
+
                     # stich the image back together first
                     sw = SlidingWindow(ref, [96, 96, 40], [128, 128, 48])
-                    print(sw.img_shape)
                     preds = sw.stitch_patches(preds,
                                               sw.window_corner_coords,
                                               [128, 128, 48],
@@ -356,9 +358,6 @@ def main(FLAGS):
                     preds = np.argmax(preds, axis=-1)
                 else:
                     preds = np.argmax(preds, axis=-1)
-
-                # check if the images and annotations are the correct files
-                print(image_files[i], anno_files[i])
 
                 overall_accuracy[i] = skm.accuracy_score(ref.flatten(), preds.flatten())
                 for j in range(FLAGS.classes):
