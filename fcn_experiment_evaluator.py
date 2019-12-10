@@ -200,7 +200,7 @@ class SlidingWindow(object):
 
 def main(FLAGS):
     # set GPU device to use
-    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
     # define the experiments
     encoders = FLAGS.encoders.split(',')
@@ -353,7 +353,6 @@ def main(FLAGS):
                                               [128, 128, 48],
                                               sw.img_shape,
                                               FLAGS.classes)
-                    write_hdf5('test_patches.h5',preds)
                     preds = np.argmax(preds, axis=-1)
                 else:
                     preds = np.argmax(preds, axis=-1)
