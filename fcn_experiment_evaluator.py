@@ -127,6 +127,76 @@ def matthews_correlation_coefficient(A, B):
     return mcc
 
 
+class SlidingWindow(object):
+    def __init__(self, I, stride, chip_size):
+        img_shape = I.shape
+        n_row_windows = np.ceil((img_shape[0] + stride[0]) / stride[0]).astype(int)
+        n_col_windows = np.ceil((img_shape[1] + stride[1]) / stride[1]).astype(int)
+        n_slice_windows = np.ceil((img_shape[2] + stride[2]) / stride[2]).astype(int)
+        n_windows = n_row_windows * n_col_windows * n_slice_windows
+
+        self.windows = np.zeros([n_windows, chip_size[0], chip_size[1], chip_size[2]], dtype='float32')
+        self.window_masks = np.zeros([n_windows, chip_size[0], chip_size[1], chip_size[2]], dtype='float32')
+        self.window_corner_coords = np.empty([n_windows, 3], dtype='float32')
+        self.img_shape = I.shape
+
+        count = 0
+        for swindow in range(n_slice_windows):
+            if swindow == 0:
+                swindow_start = swindow
+                swindow_end = chip_size
+            else:
+                swindow_start = swindow_start + stride[2]
+                swindow_end = swindow_start + chip_size[2]
+
+            if swindow_end > img_shape[2] - 1:
+                swindow_start = img_shape[2] - chip_size[2]
+                swindow_end = None
+
+            for cwindow in range(n_col_windows):
+                if cwindow == 0:
+                    cwindow_start = cwindow
+                    cwindow_end = chip_size[1]
+                else:
+                    cwindow_start = cwindow_start + stride[1]
+                    cwindow_end = cwindow_start + chip_size[1]
+
+                if cwindow_end > img_shape[1] - 1:
+                    cwindow_start = img_shape[1] - chip_size[1]
+                    cwindow_end = None
+
+                for rwindow in range(n_row_windows):
+                    if rwindow == 0:
+                        rwindow_start = rwindow
+                        rwindow_end = chip_size[0]
+                    else:
+                        rwindow_start = rwindow_start + stride[0]
+                        rwindow_end = rwindow_start + chip_size[0]
+
+                    if rwindow_end > img_shape[0] - 1:
+                        rwindow_start = img_shape[0] - chip_size[0]
+                        rwindow_end = None
+
+                    self.windows[count, :, :, :] = I[rwindow_start:rwindow_end,
+                                                     cwindow_start:cwindow_end,
+                                                     swindow_start:swindow_end]
+                    self.window_corner_coords[count, :] = [rwindow_start, cwindow_start, swindow_start]
+
+                    count += 1
+
+    @staticmethod
+    def stitch_patches(patches, patch_coords, patch_size, img_size, channels):
+        new_img = np.zeros([img_size[0], img_size[1], img_size[2], channels], dtype='float32')
+
+        for i, patch in enumerate(patches):
+            coords = patch_coords[i]
+            new_img[coords[0]:coords[0] + patch_size[0],
+                    coords[1]:coords[1] + patch_size[1],
+                    coords[2]:coords[2] + patch_size[2], :] = patch
+
+        return new_img
+
+
 def main(FLAGS):
     # set GPU device to use
     os.environ['CUDA_VISIBLE_DEVICES'] = '2'
@@ -265,11 +335,22 @@ def main(FLAGS):
                 new_file_raw = os.path.join(FLAGS.predictions_final_dir, new_name_raw)
                 os.rename(pred_file, new_file_raw)
 
-                preds = read_hdf5(new_file_raw)
-                preds = np.argmax(preds, axis=-1)
-
                 ref = read_hdf5_multientry(os.path.join(FLAGS.test_y_dir, anno_files[i]))
                 ref = np.squeeze(np.asarray(ref))
+
+                preds = read_hdf5(new_file_raw)
+
+                if experiment[0] == 'UNet3D':
+                    # stich the image back together first
+                    sw = SlidingWindow(ref, [96, 96, 40], [128, 128, 48])
+                    preds = sw.stitch_patches(preds,
+                                              sw.window_corner_coords,
+                                              [128, 128, 48],
+                                              sw.img_shape,
+                                              FLAGS.classes)
+                    preds = np.argmax(preds, axis=-1)
+                else:
+                    preds = np.argmax(preds, axis=-1)
 
                 # check if the images and annotations are the correct files
                 print(image_files[i], anno_files[i])
