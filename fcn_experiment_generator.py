@@ -124,6 +124,9 @@ def main(FLAGS):
             if FLAGS.use_skip_connections:
                 pass
             else:
+                print('-------------------------------------------')
+                print('removing skip connections')
+                print('-------------------------------------------')
                 while 'Outer skip target:concatenate' in layers:
                     layers.remove('Outer skip target:concatenate')
             configs['layers']['serial_layer_list'] = layers
@@ -141,6 +144,9 @@ def main(FLAGS):
             if FLAGS.use_skip_connections:
                 encoder_parts[-2] = 'True'
             else:
+                print('-------------------------------------------')
+                print('removing skip connections')
+                print('-------------------------------------------')
                 encoder_parts[-2] = 'False'
                 while 'Outer skip target:concatenate' in decoder:
                     decoder.remove('Outer skip target:concatenate')
@@ -266,12 +272,10 @@ if __name__ == '__main__':
                               + 'ResNeXt50,ResNeXt101,InceptionResNetV2,InceptionV3',
                         help='Convolutional encoders to investigate; single value or multiple values separated by a comma.')
 
-    parser.add_argument('--use_skip_connections', type=bool,
-                        default=True,
+    parser.add_argument('--use_skip_connections', action='store_true',
                         help='Whether or not to use skip connections between the encoder and decoder.')
 
-    parser.add_argument('--use_imagenet_weights', type=bool,
-                        default=False,
+    parser.add_argument('--use_imagenet_weights', action='store_true',
                         help='Whether or not to use a warm start with ImageNet weights.')
 
     parser.add_argument('--width', type=int,
