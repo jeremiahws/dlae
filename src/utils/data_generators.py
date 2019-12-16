@@ -41,7 +41,7 @@ class CNN2DDatasetGenerator(object):
                  samplewise_center=False,
                  samplewise_std_normalization=False,
                  zca_epsilon=None,
-                 brightness_range=(0.75, 1.25),
+                 brightness_range=None,
                  channel_shift_range=0.1,
                  shuffle_data=False,
                  rounds=1,
@@ -203,6 +203,7 @@ class CNN2DDatasetGenerator(object):
                         orig_classes = np.unique(anno)
                     else:
                         orig_classes = None
+                    orig_shape = img.shape
 
                     if self.repeat_chans:
                         img = np.repeat(img, self.chan_repititions, axis=-1)
@@ -284,6 +285,8 @@ class CNN2DDatasetGenerator(object):
 
                     brightness = None
                     if self.brightness_range is not None:
+                        if orig_shape[-1] == 1:
+                            img = np.repeat(img, 3, axis=-1)
                         brightness = np.random.uniform(self.brightness_range[0],
                                                        self.brightness_range[1])
 
@@ -336,6 +339,10 @@ class CNN2DDatasetGenerator(object):
                                              + ' samplewise_negpos_x, global_unity_x, global_negpos_x,'
                                              + ' samplewise_unity_xy, samplewise_negpos_xy, global_unity_xy,'
                                              + ' global_negpos_xy, or none.')
+
+                    if orig_shape[-1] == 1:
+                        img = np.take(img, 0, axis=-1)
+                        img = np.expand_dims(img, axis=-1)
 
                     batch_X.append(img)
                     if self.to_categorical:
@@ -528,7 +535,7 @@ class CNN3DDatasetGenerator(object):
                  samplewise_center=False,
                  samplewise_std_normalization=False,
                  zca_epsilon=None,
-                 brightness_range=(0.75, 1.25),
+                 brightness_range=None,
                  channel_shift_range=0.1,
                  shuffle_data=False,
                  rounds=1,
@@ -691,6 +698,7 @@ class CNN3DDatasetGenerator(object):
                         orig_classes = np.unique(anno)
                     else:
                         orig_classes = None
+                    orig_shape = img.shape
 
                     if self.repeat_chans:
                         img = np.repeat(img, self.chan_repititions, axis=-1)
@@ -772,6 +780,8 @@ class CNN3DDatasetGenerator(object):
 
                     brightness = None
                     if self.brightness_range is not None:
+                        if orig_shape[-1] == 1:
+                            img = np.repeat(img, 3, axis=-1)
                         brightness = np.random.uniform(self.brightness_range[0],
                                                        self.brightness_range[1])
 
@@ -928,6 +938,10 @@ class CNN3DDatasetGenerator(object):
                                                  + ' samplewise_unity_xy, samplewise_negpos_xy, global_unity_xy,'
                                                  + ' global_negpos_xy, or none.')
 
+                        if orig_shape[-1] == 1:
+                            img = np.take(img, 0, axis=-1)
+                            img = np.expand_dims(img, axis=-1)
+
                         batch_X.append(img)
                         if self.to_categorical:
                             if self.num_classes is None:
@@ -1022,7 +1036,7 @@ class FCN2DDatasetGenerator(object):
                  samplewise_center=False,
                  samplewise_std_normalization=False,
                  zca_epsilon=None,
-                 brightness_range=(0.75, 1.25),
+                 brightness_range=None,
                  channel_shift_range=0.1,
                  shuffle_data=False,
                  rounds=1,
@@ -1184,6 +1198,7 @@ class FCN2DDatasetGenerator(object):
                         orig_classes = np.unique(anno)
                     else:
                         orig_classes = None
+                    orig_shape = img.shape
 
                     if img.shape[0] != anno.shape[0] or img.shape[1] != anno.shape[1]:
                         raise ValueError('Images and annotations do not have the same number of rows and columns.')
@@ -1271,6 +1286,8 @@ class FCN2DDatasetGenerator(object):
 
                     brightness = None
                     if self.brightness_range is not None:
+                        if orig_shape[-1] == 1:
+                            img = np.repeat(img, 3, axis=-1)
                         brightness = np.random.uniform(self.brightness_range[0],
                                                        self.brightness_range[1])
 
@@ -1339,6 +1356,10 @@ class FCN2DDatasetGenerator(object):
                                              + ' samplewise_negpos_x, global_unity_x, global_negpos_x,'
                                              + ' samplewise_unity_xy, samplewise_negpos_xy, global_unity_xy,'
                                              + ' global_negpos_xy, or none.')
+
+                    if orig_shape[-1] == 1:
+                        img = np.take(img, 0, axis=-1)
+                        img = np.expand_dims(img, axis=-1)
 
                     batch_X.append(img)
                     if self.to_categorical:
@@ -1700,6 +1721,7 @@ class FCN3DDatasetGenerator(object):
                         orig_classes = np.unique(anno)
                     else:
                         orig_classes = None
+                    orig_shape = img.shape
 
                     if img.shape[0] != anno.shape[0] or img.shape[1] != anno.shape[1] or img.shape[2] != anno.shape[2]:
                         raise ValueError('Images and annotations do not have the same number of rows, columns, and slices.')
@@ -1787,6 +1809,8 @@ class FCN3DDatasetGenerator(object):
 
                     brightness = None
                     if self.brightness_range is not None:
+                        if orig_shape[-1] == 1:
+                            img = np.repeat(img, 3, axis=-1)
                         brightness = np.random.uniform(self.brightness_range[0],
                                                        self.brightness_range[1])
 
@@ -1866,6 +1890,10 @@ class FCN3DDatasetGenerator(object):
                                              + ' samplewise_negpos_x, global_unity_x, global_negpos_x,'
                                              + ' samplewise_unity_xy, samplewise_negpos_xy, global_unity_xy,'
                                              + ' global_negpos_xy, or none.')
+
+                    if orig_shape[-1] == 1:
+                        img = np.take(img, 0, axis=-1)
+                        img = np.expand_dims(img, axis=-1)
 
                     batch_X.append(img)
                     if self.to_categorical:
