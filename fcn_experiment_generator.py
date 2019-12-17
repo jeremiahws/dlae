@@ -56,11 +56,15 @@ def main(FLAGS):
 
         # apply some augmentation
         configs['augmentation']['apply_augmentation_switch'] = 'False'
-        #configs['augmentation']['width_shift'] = '0.15'
-        #configs['augmentation']['height_shift'] = '0.15'
-        configs['augmentation']['rotation_range'] = '3'
-        configs['augmentation']['zoom_range'] = '0.15'
-        configs['augmentation']['shear_range'] = '0.05'
+        configs['augmentation']['width_shift'] = '0.25'
+        configs['augmentation']['height_shift'] = '0.25'
+        configs['augmentation']['rotation_range'] = '10'
+        configs['augmentation']['zoom_range'] = '0.2'
+        configs['augmentation']['shear_range'] = '0.15'
+        configs['augmentation']['horizontal_flip'] = 'True'
+        configs['augmentation']['vertical_flip'] = 'False'
+        configs['augmentation']['rounds'] = '25'
+        configs['augmentation']['brightness_range'] = '(0.75, 1.25)'
 
         # perform some preprocessing
         configs['preprocessing']['categorical_switch'] = 'True'
