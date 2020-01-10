@@ -55,7 +55,7 @@ def main(FLAGS):
             configs = load_config(os.path.join(FLAGS.base_configs_dir, 'xception_unet.json'))
 
         # apply some augmentation
-        configs['augmentation']['apply_augmentation_switch'] = 'False'
+        configs['augmentation']['apply_augmentation_switch'] = 'True'
         configs['augmentation']['width_shift'] = '0.25'
         configs['augmentation']['height_shift'] = '0.25'
         configs['augmentation']['rotation_range'] = '10'
@@ -63,8 +63,8 @@ def main(FLAGS):
         configs['augmentation']['shear_range'] = '0.15'
         configs['augmentation']['horizontal_flip'] = 'True'
         configs['augmentation']['vertical_flip'] = 'False'
-        configs['augmentation']['rounds'] = '25'
-        configs['augmentation']['brightness_range'] = '(0.75, 1.25)'
+        configs['augmentation']['rounds'] = '2'
+        #configs['augmentation']['brightness_range'] = '(0.75, 1.0)'
 
         # perform some preprocessing
         configs['preprocessing']['categorical_switch'] = 'True'
@@ -157,10 +157,14 @@ def main(FLAGS):
             encoder = ':'.join(encoder_parts)
 
             if FLAGS.use_imagenet_weights:
-                encoder_parts[1] = 'True'
+                print('-------------------------------------------')
+                print('using ImageNet weights')
+                print('-------------------------------------------')
+                encoder_parts[1] = 'False'
                 encoder_parts[2] = 'imagenet'
-                configs['preprocessing']['repeat_X_switch'] = 'True'
-                configs['preprocessing']['repeat_X_quantity'] = '3'
+                print(encoder_parts)
+                #configs['preprocessing']['repeat_X_switch'] = 'True'
+                #configs['preprocessing']['repeat_X_quantity'] = '3'
             else:
                 encoder_parts[1] = 'False'
                 encoder_parts[2] = 'none'
@@ -191,6 +195,7 @@ def main(FLAGS):
 
             layers = []
             layers.extend([input, encoder])
+            if FLAGS.dropout: layers.append('Dropout:0.5')
             for layer in decoder: layers.append(layer)
             configs['layers']['serial_layer_list'] = layers
 
@@ -281,6 +286,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--use_imagenet_weights', action='store_true',
                         help='Whether or not to use a warm start with ImageNet weights.')
+
+    parser.add_argument('--dropout', action='store_true',
+                        help='Whether or not to add 50% dropout.')
 
     parser.add_argument('--width', type=int,
                         default=512,
