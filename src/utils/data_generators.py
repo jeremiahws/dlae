@@ -317,21 +317,29 @@ class CNN2DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -418,21 +426,29 @@ class CNN2DDatasetGenerator(object):
 
                         if self.normalization is not None:
                             if self.normalization == 'samplewise_unity_x':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
                             elif self.normalization == 'samplewise_negpos_x':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                             elif self.normalization == 'global_unity_x':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                             elif self.normalization == 'global_negpos_x':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                             elif self.normalization == 'samplewise_unity_xy':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
                             elif self.normalization == 'samplewise_negpos_xy':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                             elif self.normalization == 'global_unity_xy':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                             elif self.normalization == 'global_negpos_xy':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                             elif self.normalization == 'none':
                                 pass
                             else:
@@ -484,21 +500,29 @@ class CNN2DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -818,21 +842,29 @@ class CNN3DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -915,21 +947,29 @@ class CNN3DDatasetGenerator(object):
 
                         if self.normalization is not None:
                             if self.normalization == 'samplewise_unity_x':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
                             elif self.normalization == 'samplewise_negpos_x':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                             elif self.normalization == 'global_unity_x':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                             elif self.normalization == 'global_negpos_x':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                             elif self.normalization == 'samplewise_unity_xy':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
                             elif self.normalization == 'samplewise_negpos_xy':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                             elif self.normalization == 'global_unity_xy':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                             elif self.normalization == 'global_negpos_xy':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                             elif self.normalization == 'none':
                                 pass
                             else:
@@ -985,21 +1025,29 @@ class CNN3DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -1330,25 +1378,37 @@ class FCN2DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
-                            anno = (anno - np.min(anno)) / (np.max(anno) - np.min(anno))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(anno) - np.min(anno)) != 0:
+                                anno = (anno - np.min(anno)) / (np.max(anno) - np.min(anno))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
-                            anno = 2 * (((anno - np.min(anno)) / (np.max(anno) - np.min(anno))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(anno) - np.min(anno)) != 0:
+                                anno = 2 * (((anno - np.min(anno)) / (np.max(anno) - np.min(anno))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
-                            anno = (img - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[1] - self.min_intensity[1]) != 0:
+                                anno = (img - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
-                            anno = 2 * (((anno - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[1] - self.min_intensity[1]) != 0:
+                                anno = 2 * (((anno - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -1439,25 +1499,37 @@ class FCN2DDatasetGenerator(object):
 
                         if self.normalization is not None:
                             if self.normalization == 'samplewise_unity_x':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
                             elif self.normalization == 'samplewise_negpos_x':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                             elif self.normalization == 'global_unity_x':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                             elif self.normalization == 'global_negpos_x':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                             elif self.normalization == 'samplewise_unity_xy':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
-                                anno = (anno - np.min(anno)) / (np.max(anno) - np.min(anno))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(anno) - np.min(anno)) != 0:
+                                    anno = (anno - np.min(anno)) / (np.max(anno) - np.min(anno))
                             elif self.normalization == 'samplewise_negpos_xy':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
-                                anno = 2 * (((anno - np.min(anno)) / (np.max(anno) - np.min(anno))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(anno) - np.min(anno)) != 0:
+                                    anno = 2 * (((anno - np.min(anno)) / (np.max(anno) - np.min(anno))) - 0.5)
                             elif self.normalization == 'global_unity_xy':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
-                                anno = (img - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[1] - self.min_intensity[1]) != 0:
+                                    anno = (img - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])
                             elif self.normalization == 'global_negpos_xy':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
-                                anno = 2 * (((anno - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[1] - self.min_intensity[1]) != 0:
+                                    anno = 2 * (((anno - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])) - 0.5)
                             elif self.normalization == 'none':
                                 pass
                             else:
@@ -1507,21 +1579,29 @@ class FCN2DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -1864,25 +1944,37 @@ class FCN3DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
-                            anno = (anno - np.min(anno)) / (np.max(anno) - np.min(anno))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(anno) - np.min(anno)) != 0:
+                                anno = (anno - np.min(anno)) / (np.max(anno) - np.min(anno))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
-                            anno = 2 * (((anno - np.min(anno)) / (np.max(anno) - np.min(anno))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(anno) - np.min(anno)) != 0:
+                                anno = 2 * (((anno - np.min(anno)) / (np.max(anno) - np.min(anno))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
-                            anno = (img - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[1] - self.min_intensity[1]) != 0:
+                                anno = (img - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
-                            anno = 2 * (((anno - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[1] - self.min_intensity[1]) != 0:
+                                anno = 2 * (((anno - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -1973,25 +2065,37 @@ class FCN3DDatasetGenerator(object):
 
                         if self.normalization is not None:
                             if self.normalization == 'samplewise_unity_x':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
                             elif self.normalization == 'samplewise_negpos_x':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                             elif self.normalization == 'global_unity_x':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                             elif self.normalization == 'global_negpos_x':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                             elif self.normalization == 'samplewise_unity_xy':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
-                                anno = (anno - np.min(anno)) / (np.max(anno) - np.min(anno))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(anno) - np.min(anno)) != 0:
+                                    anno = (anno - np.min(anno)) / (np.max(anno) - np.min(anno))
                             elif self.normalization == 'samplewise_negpos_xy':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
-                                anno = 2 * (((anno - np.min(anno)) / (np.max(anno) - np.min(anno))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(anno) - np.min(anno)) != 0:
+                                    anno = 2 * (((anno - np.min(anno)) / (np.max(anno) - np.min(anno))) - 0.5)
                             elif self.normalization == 'global_unity_xy':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
-                                anno = (img - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[1] - self.min_intensity[1]) != 0:
+                                    anno = (img - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])
                             elif self.normalization == 'global_negpos_xy':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
-                                anno = 2 * (((anno - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[1] - self.min_intensity[1]) != 0:
+                                    anno = 2 * (((anno - self.min_intensity[1]) / (self.max_intensity[1] - self.min_intensity[1])) - 0.5)
                             elif self.normalization == 'none':
                                 pass
                             else:
@@ -2041,21 +2145,29 @@ class FCN3DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -2232,21 +2344,29 @@ class SSD2DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
@@ -2327,21 +2447,29 @@ class SSD2DDatasetGenerator(object):
 
                         if self.normalization is not None:
                             if self.normalization == 'samplewise_unity_x':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
                             elif self.normalization == 'samplewise_negpos_x':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                             elif self.normalization == 'global_unity_x':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                             elif self.normalization == 'global_negpos_x':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                             elif self.normalization == 'samplewise_unity_xy':
-                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = (img - np.min(img)) / (np.max(img) - np.min(img))
                             elif self.normalization == 'samplewise_negpos_xy':
-                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                                if (np.max(img) - np.min(img)) != 0:
+                                    img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                             elif self.normalization == 'global_unity_xy':
-                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                             elif self.normalization == 'global_negpos_xy':
-                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                                if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                    img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                             elif self.normalization == 'none':
                                 pass
                             else:
@@ -2395,21 +2523,29 @@ class SSD2DDatasetGenerator(object):
 
                     if self.normalization is not None:
                         if self.normalization == 'samplewise_unity_x':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_x':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_x':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_x':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'samplewise_unity_xy':
-                            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = (img - np.min(img)) / (np.max(img) - np.min(img))
                         elif self.normalization == 'samplewise_negpos_xy':
-                            img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
+                            if (np.max(img) - np.min(img)) != 0:
+                                img = 2 * (((img - np.min(img)) / (np.max(img) - np.min(img))) - 0.5)
                         elif self.normalization == 'global_unity_xy':
-                            img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = (img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])
                         elif self.normalization == 'global_negpos_xy':
-                            img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
+                            if (self.max_intensity[0] - self.min_intensity[0]) != 0:
+                                img = 2 * (((img - self.min_intensity[0]) / (self.max_intensity[0] - self.min_intensity[0])) - 0.5)
                         elif self.normalization == 'none':
                             pass
                         else:
