@@ -68,12 +68,12 @@ class FullyConvolutionalNetwork(object):
                 self.errors.append('Level3Error:CouldNotCompileMultiGpuFcnGraph')
 
         else:
-            try:
+            # try:
                 self.model.compile(optimizer=self.engine_configs.optimizer.optimizer,
                                    loss=self.engine_configs.loss_function.loss,
                                    metrics=self.engine_configs.monitors.monitors)
-            except:
-                self.errors.append('Level3Error:CouldNotCompileFcnGraph')
+            # except:
+            #     self.errors.append('Level3Error:CouldNotCompileFcnGraph')
 
     def train_graph(self):
         if self.engine_configs.val_data.val_generator is not None:
@@ -109,7 +109,7 @@ class FullyConvolutionalNetwork(object):
         pass
 
     def predict_on_graph(self):
-        try:
+        # try:
             self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath)
             predictions = self.model.predict_generator(self.engine_configs.test_data.test_generator.generate(),
                                                        steps=len(self.engine_configs.test_data.test_generator))
@@ -120,5 +120,5 @@ class FullyConvolutionalNetwork(object):
 
             del self.model
             K.clear_session()
-        except:
-            self.errors.append('Level3Error:CouldNotMakePredictionsonFcnGraph')
+        # except:
+        #     self.errors.append('Level3Error:CouldNotMakePredictionsonFcnGraph')
