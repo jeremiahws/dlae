@@ -875,6 +875,7 @@ class LossFunction(object):
         self.train_data = deepcopy(train_data)
         self.loss = None
         self.class_weights = None
+        self.classes = preprocessing.i_num_categories
         self.set_loss_function()
 
     def get_class_weights(self):
@@ -882,15 +883,15 @@ class LossFunction(object):
         gen.to_categorical = False
         n_batches = len(gen)
         gen = gen.generate()
-        masks = []
+        n_samples = np.zeros(shape=(self.classes,))
+        n_counts = np.zeros(shape=(self.classes,))
         for i in range(n_batches):
             data = next(gen)
-            masks.append(data[1])
-        masks = np.concatenate(masks, axis=0)
-        self.class_weights = compute_class_weight('balanced', np.unique(masks), masks.flatten())
-        del masks
+            for j in range(self.classes):
+                n_samples[j] = n_samples[j] + data[1].size
+                n_counts[j] = n_counts[j] + np.count_nonzero(data[1] == j)
 
-        return
+        self.class_weights = n_samples / (self.classes * n_counts)
 
     def set_loss_function(self):
         if self.s_lossFunction == 'categorical_crossentropy':
