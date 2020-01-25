@@ -881,6 +881,8 @@ class LossFunction(object):
     def get_class_weights(self):
         gen = self.train_data.train_generator
         gen.to_categorical = False
+        gen.apply_aug = False
+        gen.rounds = 1
         n_batches = len(gen)
         gen = gen.generate()
         n_samples = np.zeros(shape=(self.classes,))
