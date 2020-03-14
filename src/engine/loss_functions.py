@@ -20,6 +20,9 @@ Contains additional loss functions not natively part of Keras.
 import keras
 import tensorflow as tf
 from keras import backend as K
+import numpy as np
+import tensorflow as tf
+from sklearn.utils.class_weight import compute_class_weight
 
 
 # Pulled from https://github.com/keras-team/keras/issues/9395
@@ -109,6 +112,20 @@ class FocalLoss:
         eps = K.epsilon()
         y_pred = K.clip(y_pred, eps, 1. - eps)
         return -self.alpha * K.sum(K.pow(1. - y_pred, self.gamma) * y_true * K.log(y_pred), axis=-1)
+
+
+# pulled and modified from https://gist.github.com/wassname/ce364fddfc8a025bfab4348cf5de852d
+class WeightedCrossentropy:
+    def __init__(self, weights):
+        self.weights = K.variable(weights)
+
+    def compute_loss(self, y_true, y_pred):
+        y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
+        y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+        loss = y_true * K.log(y_pred) * self.weights
+        loss = -K.sum(loss, -1)
+
+        return loss
 
 
 # https://github.com/jocicmarko/ultrasound-nerve-segmentation/blob/master/train.py

@@ -543,6 +543,7 @@ def level_one_error_checking(configs):
         configs['augmentation']['rounds'] = '1'
 
     if any(configs['loss_function']['loss'] in x for x in ['categorical_crossentropy',
+                                                           'weighted_categorical_crossentropy',
                                                            'sparse_categorical_crossentropy', 'mean_squared_error',
                                                            'mean_absolute_error', 'tversky', 'pix2pix',
                                                            'cyclegan', 'ssd', 'jaccard', 'focal', 'soft_dice']):

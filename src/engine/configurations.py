@@ -20,11 +20,15 @@ Contains classes to construct the engine configurations from a configuration str
 import keras
 from ast import literal_eval
 from src.utils.general_utils import str2bool, check_keys
-from src.engine.loss_functions import TverskyLoss, SSDLoss, JaccardLoss, FocalLoss, SoftDiceLoss
+from src.engine.loss_functions import TverskyLoss, SSDLoss, JaccardLoss, FocalLoss, SoftDiceLoss, WeightedCrossentropy
 from copy import deepcopy
 from src.utils.data_generators import CNN2DDatasetGenerator, FCN2DDatasetGenerator,\
                                       SSD2DDatasetGenerator, CNN3DDatasetGenerator,\
                                       FCN3DDatasetGenerator
+import keras.backend.tensorflow_backend as K
+import numpy as np
+from copy import deepcopy
+from sklearn.utils.class_weight import compute_class_weight
 
 
 class EngineConfigurations(object):
@@ -46,7 +50,7 @@ class EngineConfigurations(object):
         self.loader = Loader(configs)
         self.saver = Saver(configs)
         self.layers = Layers(configs)
-        self.loss_function = LossFunction(configs, self.data_preprocessing)
+        self.loss_function = LossFunction(configs, self.data_preprocessing, self.train_data)
         self.callbacks = Callbacks(self.saver, self.learning_rate, self.train_options)
 
 
@@ -859,7 +863,7 @@ class Layers(object):
 
 
 class LossFunction(object):
-    def __init__(self, configs, preprocessing):
+    def __init__(self, configs, preprocessing, train_data):
         """
         Constructor class to prepare the loss function configurations for DLAE.
         :param configs: engine configuration structure
@@ -868,8 +872,28 @@ class LossFunction(object):
         self.f_parameter1 = float(configs['loss_function']['parameter1'])
         self.f_parameter2 = float(configs['loss_function']['parameter2'])
         self.image_context = preprocessing.s_image_context
+        self.train_data = deepcopy(train_data)
         self.loss = None
+        self.class_weights = None
+        self.classes = preprocessing.i_num_categories
         self.set_loss_function()
+
+    def get_class_weights(self):
+        gen = self.train_data.train_generator
+        gen.to_categorical = False
+        gen.apply_aug = False
+        gen.rounds = 1
+        n_batches = len(gen)
+        gen = gen.generate()
+        n_samples = np.zeros(shape=(self.classes,))
+        n_counts = np.zeros(shape=(self.classes,))
+        for i in range(n_batches):
+            data = next(gen)
+            for j in range(self.classes):
+                n_samples[j] = n_samples[j] + data[1].size
+                n_counts[j] = n_counts[j] + np.count_nonzero(data[1] == j)
+
+        self.class_weights = n_samples / (self.classes * n_counts)
 
     def set_loss_function(self):
         if self.s_lossFunction == 'categorical_crossentropy':
@@ -883,6 +907,11 @@ class LossFunction(object):
 
         elif self.s_lossFunction == 'mean_absolute_error':
             self.loss = keras.losses.mean_absolute_error
+
+        elif self.s_lossFunction == 'weighted_categorical_crossentropy':
+            self.get_class_weights()
+            xentropy_loss = WeightedCrossentropy(weights=self.class_weights)
+            self.loss = xentropy_loss.compute_loss
 
         elif self.s_lossFunction == 'tversky':
             tversky_loss = TverskyLoss(alpha=self.f_parameter1, beta=self.f_parameter2)

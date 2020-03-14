@@ -202,6 +202,7 @@ def main(FLAGS):
         # ensure xentropy/jaccard/focal only used once per encoder
         if experiment[1] == 'sparse_categorical_crossentropy'\
                 or experiment[1] == 'categorical_crossentropy'\
+                or experiment[1] == 'weighted_categorical_crossentropy'\
                 or experiment[1] == 'jaccard'\
                 or experiment[1] == 'focal':
             if experiment[1] == 'focal':
