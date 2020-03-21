@@ -54,24 +54,14 @@ class ConvolutionalNeuralNetwork(object):
 
     def compile_graph(self):
         if self.engine_configs.train_options.i_nGpus > 1:
-            try:
-                self.parallel_model = ModelMGPU(self.model, self.engine_configs.train_options.i_nGpus)
-            except:
-                self.errors.append('Level3Error:CouldNotConvertCnnModeltoMultiGpuModel')
-
-            try:
-                self.parallel_model.compile(optimizer=self.engine_configs.optimizer.optimizer,
-                                            loss=self.engine_configs.loss_function.loss,
-                                            metrics=self.engine_configs.monitors.monitors)
-            except:
-                self.errors.append('Level3Error:CouldNotCompileMultiGpuCnnGraph')
+            self.parallel_model = ModelMGPU(self.model, self.engine_configs.train_options.i_nGpus)
+            self.parallel_model.compile(optimizer=self.engine_configs.optimizer.optimizer,
+                                        loss=self.engine_configs.loss_function.loss,
+                                        metrics=self.engine_configs.monitors.monitors)
         else:
-            try:
-                self.model.compile(optimizer=self.engine_configs.optimizer.optimizer,
-                                   loss=self.engine_configs.loss_function.loss,
-                                   metrics=self.engine_configs.monitors.monitors)
-            except:
-                self.errors.append('Level3Error:CouldNotCompileCnnGraph')
+            self.model.compile(optimizer=self.engine_configs.optimizer.optimizer,
+                               loss=self.engine_configs.loss_function.loss,
+                               metrics=self.engine_configs.monitors.monitors)
 
     def train_graph(self):
         if self.engine_configs.val_data.val_generator is not None:
@@ -98,25 +88,19 @@ class ConvolutionalNeuralNetwork(object):
                                          callbacks=self.engine_configs.callbacks.callbacks)
 
         if self.engine_configs.saver.b_saveModel:
-            try:
-                self.model.save(self.engine_configs.saver.s_saveModelPath)
-            except:
-                self.errors.append('Level3Error:NoCnnGraphtoSave')
+            self.model.save(self.engine_configs.saver.s_saveModelPath)
 
     def retrain_graph(self):
         pass
 
     def predict_on_graph(self):
-        try:
-            self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath)
-            predictions = self.model.predict_generator(self.engine_configs.test_data.test_generator.generate(),
-                                                       steps=len(self.engine_configs.test_data.test_generator))
+        self.model = keras.models.load_model(self.engine_configs.loader.s_loadModelPath)
+        predictions = self.model.predict_generator(self.engine_configs.test_data.test_generator.generate(),
+                                                   steps=len(self.engine_configs.test_data.test_generator))
 
-            stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
+        stamp = datetime.datetime.fromtimestamp(time.time()).strftime('date_%Y_%m_%d_time_%H_%M_%S')
 
-            write_hdf5('cnn_predictions_' + stamp + '.h5', predictions)
+        write_hdf5('cnn_predictions_' + stamp + '.h5', predictions)
 
-            del self.model
-            K.clear_session()
-        except:
-            self.errors.append('Level3Error:CouldNotMakePredictionsonCnnGraph')
+        del self.model
+        K.clear_session()
