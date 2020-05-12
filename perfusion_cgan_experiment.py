@@ -307,7 +307,7 @@ class CGAN(object):
             h3 = leaky_relu(self.d_bn3(conv2d(h2, self.df_dim*8, stride=1, name='d_h3_conv')))
             h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_lin')
 
-            return tf.nn.tanh(h4), h4
+            return tf.nn.sigmoid(h4), h4
 
     def generator(self, image):
         with tf.variable_scope("generator") as scope:
