@@ -508,7 +508,7 @@ def main(_):
                                      apply_aug=False)
 
     test_data = FCN2DDatasetGenerator(test_imgs,
-                                      shuffle_data=True,
+                                      shuffle_data=False,
                                       batch_size=1,
                                       subset='test',
                                       normalization='samplewise_negpos_xy',
