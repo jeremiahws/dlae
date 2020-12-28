@@ -1186,6 +1186,7 @@ def main(_):
                                      normalization='samplewise_negpos_xy',
                                      apply_aug=False)
 
+<<<<<<< HEAD
     # test_data = FCN2DDatasetGenerator(test_imgs,
     #                                   shuffle_data=True,
     #                                   batch_size=1,
@@ -1278,6 +1279,34 @@ def main(_):
                     model.predict_on_graph(test_data, os.path.join(preds_file_name, 'model' + str(i), 'pt' + str(j) + '.h5'))
 
             tf.keras.backend.clear_session()
+=======
+    test_data = FCN2DDatasetGenerator(test_imgs,
+                                      shuffle_data=False,
+                                      batch_size=1,
+                                      subset='test',
+                                      normalization='samplewise_negpos_xy',
+                                      apply_aug=False)
+
+    with tf.Session() as sess:
+        model = CGAN(sess,
+                     image_size=256,
+                     batch_size=1,
+                     output_size=256,
+                     gf_dim=64,
+                     df_dim=64,
+                     l1_lambda=100,
+                     input_c_dim=60,
+                     output_c_dim=1,
+                     checkpoint_dir=ckpt_dir,
+                     load_checkpoint=load_ckpt,
+                     train_data_gen=train_data,
+                     valid_data_gen=val_data)
+
+        if dl_action == 'train':
+            model.train_graph()
+        else:
+            model.predict_on_graph(test_data, preds_file_name)
+>>>>>>> 42e430f7683239f0ca93c1311da883bbb6654db1
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 # Deep Learning Application Engine (DLAE)
 
-DLAE is a software framework and application that enables users to design, train, validate, and coherently encapsulate and deploy deep learning (DL) models in medical imaging, while hiding programmatic implementation details. Researchers and developers in other imaging domains may also find this software useful.
+DLAE is a software framework and application that enables users to design, train, validate, and coherently encapsulate and deploy deep learning (DL) models in medical imaging, while hiding programmatic implementation details. Researchers and developers in other imaging domains may also find this software useful. The companion publication can be found here: https://doi.org/10.1016/j.softx.2019.100347
 
 # Python Version
 DLAE currently uses `python==3.6.8`
