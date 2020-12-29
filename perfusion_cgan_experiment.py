@@ -1122,51 +1122,18 @@ def main(_):
     train_annos = r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_train_annos.h5'
     valid_imgs = r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_validation_images.h5'
     valid_annos = r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_validation_annos.h5'
-    # test_imgs = r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_1.h5'
-    test_imgs = [r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_1.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_2.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_3.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_4.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_5.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_6.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_7.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_8.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_9.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_10.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_11.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_12.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_13.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_14.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_15.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_16.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_17.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_18.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_19.h5',
-                 r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_20.h5']
+    test_imgs = r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_images_1.h5'
     # ckpt_dir = r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run7'
-    ckpt_dir = [r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run7\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run8\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run9\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run10\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run11\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run12\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run13\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run14\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run15\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run16\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run17\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run18\test_1_256',
-                r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run19\test_1_256']
-    # ckpt_dir = './abti_ckpt'
+    ckpt_dir = './abti_ckpt'
     # preds_file_name = r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_preds_1.h5'
     preds_file_name = r'Y:\Prostate Brachytherapy\ABTI_clean_files\ISMRM2021'
 
-    # load_ckpt = False
-    load_ckpt = True
-    # dl_action = 'train'
+    load_ckpt = False
+    # load_ckpt = True
+    dl_action = 'train'
     cgan_type = 'cgan' #'cascaded_cgan' or 'cgan'
-    epochs = 30
-    dl_action = 'test'
+    epochs = 100
+    # dl_action = 'test'
 
     train_data = FCN2DDatasetGenerator(train_imgs,
                                        annos_hdf5_path=train_annos,
@@ -1186,64 +1153,30 @@ def main(_):
                                      normalization='samplewise_negpos_xy',
                                      apply_aug=False)
 
-<<<<<<< HEAD
-    # test_data = FCN2DDatasetGenerator(test_imgs,
-    #                                   shuffle_data=True,
-    #                                   batch_size=1,
-    #                                   subset='test',
-    #                                   normalization='samplewise_negpos_xy',
-    #                                   apply_aug=False)
+    test_data = FCN2DDatasetGenerator(test_imgs,
+                                      shuffle_data=True,
+                                      batch_size=1,
+                                      subset='test',
+                                      normalization='samplewise_negpos_xy',
+                                      apply_aug=False)
 
-    # with tf.Session() as sess:
-    #     if cgan_type == 'cgan':
-    #         model = CGAN(sess,
-    #                      image_size=256,
-    #                      batch_size=1,
-    #                      output_size=256,
-    #                      gf_dim=64,
-    #                      df_dim=64,
-    #                      l1_lambda=100,
-    #                      input_c_dim=60,
-    #                      output_c_dim=1,
-    #                      checkpoint_dir=ckpt_dir,
-    #                      load_checkpoint=load_ckpt,
-    #                      train_data_gen=train_data,
-    #                      valid_data_gen=val_data)
-    #     elif cgan_type == 'cascaded_cgan':
-    #         model = CascadedCGAN(sess,
-    #                              image_size=256,
-    #                              batch_size=1,
-    #                              output_size=256,
-    #                              gf_dim=64,
-    #                              df_dim=64,
-    #                              l1_lambda=100,
-    #                              input_c_dim=60,
-    #                              output_c_dim=1,
-    #                              checkpoint_dir=ckpt_dir,
-    #                              load_checkpoint=load_ckpt,
-    #                              train_data_gen=train_data,
-    #                              valid_data_gen=val_data)
-    #     else:
-    #         ValueError('cgan_type must be either cgan or cascaded_cgan')
-    #
-    #     if dl_action == 'train':
-    #         model.train_graph(epochs=epochs)
-    #     else:
-    #         model.predict_on_graph(test_data, preds_file_name)
-
-    import os
-    for i, model_ in enumerate(ckpt_dir):
-        os.mkdir(os.path.join(preds_file_name, 'model' + str(i)))
-        for j in range(len(test_imgs)):
-            test_data = FCN2DDatasetGenerator(test_imgs[j],
-                                              shuffle_data=False,
-                                              batch_size=1,
-                                              subset='test',
-                                              normalization='samplewise_negpos_xy',
-                                              apply_aug=False)
-            with tf.Session() as sess:
-                if cgan_type == 'cgan':
-                    model = CGAN(sess,
+    with tf.Session() as sess:
+        if cgan_type == 'cgan':
+            model = CGAN(sess,
+                         image_size=256,
+                         batch_size=1,
+                         output_size=256,
+                         gf_dim=64,
+                         df_dim=64,
+                         l1_lambda=100,
+                         input_c_dim=60,
+                         output_c_dim=1,
+                         checkpoint_dir=ckpt_dir,
+                         load_checkpoint=load_ckpt,
+                         train_data_gen=train_data,
+                         valid_data_gen=val_data)
+        elif cgan_type == 'cascaded_cgan':
+            model = CascadedCGAN(sess,
                                  image_size=256,
                                  batch_size=1,
                                  output_size=256,
@@ -1252,61 +1185,17 @@ def main(_):
                                  l1_lambda=100,
                                  input_c_dim=60,
                                  output_c_dim=1,
-                                 checkpoint_dir=model_,
+                                 checkpoint_dir=ckpt_dir,
                                  load_checkpoint=load_ckpt,
                                  train_data_gen=train_data,
                                  valid_data_gen=val_data)
-                elif cgan_type == 'cascaded_cgan':
-                    model = CascadedCGAN(sess,
-                                         image_size=256,
-                                         batch_size=1,
-                                         output_size=256,
-                                         gf_dim=64,
-                                         df_dim=64,
-                                         l1_lambda=100,
-                                         input_c_dim=60,
-                                         output_c_dim=1,
-                                         checkpoint_dir=model_,
-                                         load_checkpoint=load_ckpt,
-                                         train_data_gen=train_data,
-                                         valid_data_gen=val_data)
-                else:
-                    ValueError('cgan_type must be either cgan or cascaded_cgan')
-
-                if dl_action == 'train':
-                    model.train_graph(epochs=epochs)
-                else:
-                    model.predict_on_graph(test_data, os.path.join(preds_file_name, 'model' + str(i), 'pt' + str(j) + '.h5'))
-
-            tf.keras.backend.clear_session()
-=======
-    test_data = FCN2DDatasetGenerator(test_imgs,
-                                      shuffle_data=False,
-                                      batch_size=1,
-                                      subset='test',
-                                      normalization='samplewise_negpos_xy',
-                                      apply_aug=False)
-
-    with tf.Session() as sess:
-        model = CGAN(sess,
-                     image_size=256,
-                     batch_size=1,
-                     output_size=256,
-                     gf_dim=64,
-                     df_dim=64,
-                     l1_lambda=100,
-                     input_c_dim=60,
-                     output_c_dim=1,
-                     checkpoint_dir=ckpt_dir,
-                     load_checkpoint=load_ckpt,
-                     train_data_gen=train_data,
-                     valid_data_gen=val_data)
+        else:
+            ValueError('cgan_type must be either cgan or cascaded_cgan')
 
         if dl_action == 'train':
-            model.train_graph()
+            model.train_graph(epochs=epochs)
         else:
             model.predict_on_graph(test_data, preds_file_name)
->>>>>>> 42e430f7683239f0ca93c1311da883bbb6654db1
 
 
 if __name__ == '__main__':
