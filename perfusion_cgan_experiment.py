@@ -1126,12 +1126,11 @@ def main(_):
     # ckpt_dir = r'Y:\Prostate Brachytherapy\ABTI_clean_files\ismrm_unet_cgan_run7'
     ckpt_dir = './abti_ckpt'
     # preds_file_name = r'Y:\Prostate Brachytherapy\ABTI_clean_files\abti_test_preds_1.h5'
-    preds_file_name = r'Y:\Prostate Brachytherapy\ABTI_clean_files\ISMRM2021'
 
     load_ckpt = False
     # load_ckpt = True
     dl_action = 'train'
-    cgan_type = 'cgan' #'cascaded_cgan' or 'cgan'
+    cgan_type = 'cgan'
     epochs = 100
     # dl_action = 'test'
 
